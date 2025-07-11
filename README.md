@@ -7,7 +7,7 @@ Frontend envoie les edit au serveur<br>
 <br>
 Possibilité de darkmode
 <br>Ultrascalable pour l'évolution ou l'installation(préconfiguration dans un fichier cmd 2 paramètres a remplir, architecture optimisé pour l'évolution)
-<br>Possibilité de rajouter des fonctions ultra facilement, architecture très ergonomique.
+<br>Possibilité de rajouter des fonctions ultra facilement.
 <br>
 <br>
 La python 3.13 et 2 clic ! :)
