@@ -1,5 +1,5 @@
 # Dashboard-web-for-MT4
-A venir, projet open-source analyse de ces position et de la gestion du risque connecté à un compte MT4 et un ExpertAdvisor.
+A venir, projet open-source licence non commercial a venir, analyse de ces position et de la gestion du risque connecté à un compte MT4 et un ExpertAdvisor.
 
 MT4 Sauvegarde et édit du json
 Backend APIRest avec flask et le json
