@@ -1,2 +1,4 @@
 # Dashboard-web-for-MT4
-Projet de création de dashboard MT4 personnalisé
+A venir, projet open-source analyse de ces position et de la gestion du risque.
+<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4/blob/main/Capture.PNG" style="text-align: center;" alt="Texte alternatif" width="500" height="880"></center>
+
