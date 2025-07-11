@@ -9,7 +9,6 @@ Possibilité de darkmode
 <br>Ultrascalable pour l'évolution ou l'installation(préconfiguration dans un fichier cmd 2 paramètres a remplir, architecture optimisé pour l'évolution)
 <br>Possibilité de rajouter des fonctions ultra facilement, architecture très ergonomique.
 <br>
-<br>C'est un peux pour rattraper l'autre projet sur MT4 avec EA mais qui insuportable a installer.
 <br>
 La python 3.13 et 2 clic ! :)
 <br>
