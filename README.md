@@ -6,7 +6,7 @@ Backend APIRest avec flask et le json<br>
 Frontend envoie les edit au serveur<br>
 <br>
 Possibilité de darkmode
-<br>Ultrascalable sur vos PC(préconfiguration dans un fichier cmd 2 paramètres a remplir)
+<br>Ultrascalable pour l'évolution ou l'installation(préconfiguration dans un fichier cmd 2 paramètres a remplir, architecture optimisé pour l'évolution)
 <br>Possibilité de rajouter des fonctions ultra facilement, architecture très ergonomique.
 <br>
 <br>C'est un peux pour rattraper l'autre projet sur MT4 avec EA mais qui insuportable a installer.
