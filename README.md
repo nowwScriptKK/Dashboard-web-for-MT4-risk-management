@@ -8,6 +8,8 @@ J'avais auparavant développé un outil basé sur l'IA pour MT4, mais il avait u
 
 Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une configuration simple, rapide, et modulaire. L’objectif est de poser des bases solides pour en faire un véritable outil de management du trading, avec des fonctionnalités avancées à venir — dont l’intégration progressive de l’IA.
 
+Portfolio : https://maxwimd.kesug.com/
+
 Il faut faut python 3.13 : https://www.python.org/downloads/release/python-3130/
 
 Un seul fichier à configurer après avoir installer python : config.cmd
