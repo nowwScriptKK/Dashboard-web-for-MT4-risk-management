@@ -10,6 +10,12 @@ Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une co
 
 1 seul fichier à configurer après avoir installer python : config.cmd
 2 lancer l'expert advisor sur MT4
+<br>
+
+
+<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture_1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
+
+<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
 
 ---
 
