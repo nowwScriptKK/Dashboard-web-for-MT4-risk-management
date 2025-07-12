@@ -73,7 +73,7 @@ Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une co
 
 ### Étapes :
 
-1. **Installer Python 3.11+** (recommandé : 3.11 ou plus récent)
+1. **Installer Python 3.13+**
 2. **Configurer le fichier `config.cmd`** :
    - Clic droit → Modifier
    - Modifier cette ligne :
@@ -142,14 +142,26 @@ Chaque fichier déclare son propre blueprint :
 comments_bp = Blueprint('comments', __name__)
 ```
 
-Cette architecture permet de séparer proprement les fonctionnalités du serveur.
-<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
+## 📄 Licence
 
+Ce projet est sous licence **Creative Commons BY-NC 4.0**.  
+Vous pouvez l'utiliser, l’adapter et le partager librement **à condition de ne pas l’utiliser à des fins commerciales, interdiction a la revente ou usage commercial**.
+
+👉 [Détails de la licence](https://creativecommons.org/licenses/by-nc/4.0/
 
 
 
 ## 👤 Auteur
 
 - **Discord** : `Theglitch_is`
+
+
+
+
+Cette architecture permet de séparer proprement les fonctionnalités du serveur.
+<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
+
+
+
 
 
