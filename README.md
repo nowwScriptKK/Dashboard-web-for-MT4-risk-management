@@ -19,6 +19,34 @@ Un seul fichier à configurer après avoir installer python : config.cmd
 <center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture_1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
 ⚠️Le projet et fait pour tourner en local.
 
+## ⚙️ Configuration initiale
+
+### Étapes :
+
+1. **Installer Python 3.13+**
+2. **Configurer le fichier `config.cmd`** :
+   - Clic droit → Modifier
+   - Modifier cette ligne :
+     ```cmd
+     set "MT4_PATH=C:\Users\1234\AppData\Roaming\MetaQuotes\Terminal\XXXXXX\MQL4"
+     ```
+     > Pour trouver ce chemin, ouvrir MT4 → Fichier → *Ouvrir le dossier des données* → Copier le chemin jusqu’à `MQL4`
+   - Facultatif : personnaliser le solde de départ
+     ```cmd
+     set "STARTING_BALANCE=10000"
+     ```
+3. **Lancer `config.cmd` en tant qu’administrateur**
+4. **Charger l’Expert Advisor** dans MT4 :
+   - Copier les fichiers du dossier `MT4Dashboard/MQ4` dans :
+     ```
+     MQL4/Experts/
+     ```
+   - Redémarrer MetaTrader 4
+   - Glisser l’EA sur un graphique
+   - Autoriser les DLL et le trading automatique
+
+---
+
 ---
 
 ## 🔧 Technologies utilisées
@@ -71,33 +99,7 @@ Un seul fichier à configurer après avoir installer python : config.cmd
 
 ---
 
-## ⚙️ Configuration initiale
 
-### Étapes :
-
-1. **Installer Python 3.13+**
-2. **Configurer le fichier `config.cmd`** :
-   - Clic droit → Modifier
-   - Modifier cette ligne :
-     ```cmd
-     set "MT4_PATH=C:\Users\1234\AppData\Roaming\MetaQuotes\Terminal\XXXXXX\MQL4"
-     ```
-     > Pour trouver ce chemin, ouvrir MT4 → Fichier → *Ouvrir le dossier des données* → Copier le chemin jusqu’à `MQL4`
-   - Facultatif : personnaliser le solde de départ
-     ```cmd
-     set "STARTING_BALANCE=10000"
-     ```
-3. **Lancer `config.cmd` en tant qu’administrateur**
-4. **Charger l’Expert Advisor** dans MT4 :
-   - Copier les fichiers du dossier `MT4Dashboard/MQ4` dans :
-     ```
-     MQL4/Experts/
-     ```
-   - Redémarrer MetaTrader 4
-   - Glisser l’EA sur un graphique
-   - Autoriser les DLL et le trading automatique
-
----
 
 
 ---
