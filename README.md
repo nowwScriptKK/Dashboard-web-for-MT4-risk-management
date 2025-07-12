@@ -13,6 +13,9 @@ Il faut faut python 3.13 : https://www.python.org/downloads/release/python-3130/
 Un seul fichier à configurer après avoir installer python : config.cmd
 
 2 lancer l'expert advisor sur MT4
+
+Dans le script MQ4 vous pouvez modifier la mise à jour des données de trade, actuellement 5 secondes.
+
 <br>
 
 
