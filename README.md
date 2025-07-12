@@ -182,3 +182,7 @@ L'auteur ne saurait être tenu responsable des pertes financières, directes ou 
 
 Le trading comporte des risques importants de perte. Il est fortement recommandé de bien tester ce système sur compte démo avant toute utilisation en conditions réelles.
 
+
+
+
+💼 Usage commercial ou acquisition du projet : me contacter.
