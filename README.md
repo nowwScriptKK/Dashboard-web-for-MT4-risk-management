@@ -184,5 +184,5 @@ Le trading comporte des risques importants de perte. Il est fortement recommand�
 💼 Usage commercial ou acquisition du projet : me contacter.
 ## 👤 Auteur
 
-- **Discord** : `Theglitch_is`
+- **Telegram** : `https://t.me/Theglitchis`
 
