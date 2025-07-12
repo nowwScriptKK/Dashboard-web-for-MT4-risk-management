@@ -163,5 +163,12 @@ Cette architecture permet de séparer proprement les fonctionnalités du serveur
 
 
 
+## ⚠️ Avertissement :
+Ce programme est fourni à titre informatif et éducatif uniquement. Il ne constitue en aucun cas un conseil en investissement, en trading ou en gestion financière.
 
+Toute décision d'utilisation de ce logiciel ou d'exécution de trades automatisés reste de la responsabilité exclusive de l'utilisateur.
+
+L'auteur ne saurait être tenu responsable des pertes financières, directes ou indirectes, pouvant résulter de l'utilisation de ce programme.
+
+Le trading comporte des risques importants de perte. Il est fortement recommandé de bien tester ce système sur compte démo avant toute utilisation en conditions réelles.
 
