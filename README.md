@@ -17,6 +17,34 @@ Un seul fichier à configurer après avoir installer python : config.cmd
 
 
 <center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture_1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
+
+## 💻 Fonctionnalités
+
+### 📊 Analyse et Affichage
+- Vue en **€ ou %**
+- **Mode sombre**
+- **Tableau récapitulatif des performances**
+  - Moyenne de gain
+  - Meilleur / Pire trade
+  - Drawdown actuel
+- Données de compte :
+  - Balance, Equity, Free Margin, Margin, Leverage
+  - Devise du compte, Numéro de compte
+  - Capital actuel, RR moyen, etc.
+- **Graphiques** dynamiques en fonction du capital de départ
+- **Historique complet** récupéré depuis MT4
+
+### 🧠 Gestion des trades
+- Liste des trades **ouverts** avec ajout/modification/suppression de commentaires :
+  - `Attente:`, `Confiance (0-5)`, `Satisfaction`, `Texte libre`
+- Liste des trades **fermés** avec commentaires
+- **Fonctions de gestion** :
+  - Fermer tous les trades
+  - Stop Loss automatique (en pips)
+  - Trailing Stop (en pips)
+
+---
+
 ⚠️Le projet et fait pour tourner en local.
 
 ## ⚙️ Configuration initiale
@@ -72,32 +100,7 @@ Un seul fichier à configurer après avoir installer python : config.cmd
 | `/api/capital` | Récupère le capital |
 ---
 
-## 💻 Fonctionnalités
 
-### 📊 Analyse et Affichage
-- Vue en **€ ou %**
-- **Mode sombre**
-- **Tableau récapitulatif des performances**
-  - Moyenne de gain
-  - Meilleur / Pire trade
-  - Drawdown actuel
-- Données de compte :
-  - Balance, Equity, Free Margin, Margin, Leverage
-  - Devise du compte, Numéro de compte
-  - Capital actuel, RR moyen, etc.
-- **Graphiques** dynamiques en fonction du capital de départ
-- **Historique complet** récupéré depuis MT4
-
-### 🧠 Gestion des trades
-- Liste des trades **ouverts** avec ajout/modification/suppression de commentaires :
-  - `Attente:`, `Confiance (0-5)`, `Satisfaction`, `Texte libre`
-- Liste des trades **fermés** avec commentaires
-- **Fonctions de gestion** :
-  - Fermer tous les trades
-  - Stop Loss automatique (en pips)
-  - Trailing Stop (en pips)
-
----
 
 
 
