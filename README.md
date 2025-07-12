@@ -9,13 +9,13 @@ J'avais auparavant développé un outil basé sur l'IA pour MT4, mais il avait u
 Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une configuration simple, rapide, et modulaire. L’objectif est de poser des bases solides pour en faire un véritable outil de management du trading, avec des fonctionnalités avancées à venir — dont l’intégration progressive de l’IA.
 
 1 seul fichier à configurer après avoir installer python : config.cmd
+
 2 lancer l'expert advisor sur MT4
 <br>
 
 
 <center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture_1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
 
-<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
 
 ---
 
@@ -143,6 +143,8 @@ comments_bp = Blueprint('comments', __name__)
 ```
 
 Cette architecture permet de séparer proprement les fonctionnalités du serveur.
+<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
+
 
 
 
