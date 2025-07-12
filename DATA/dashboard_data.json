@@ -1,0 +1,27 @@
+{
+  "account": {
+    "number": 14211111,
+    "name": "FTMO Free Trial Swing USD",
+    "currency": "USD",
+    "leverage": 30,
+    "balance": 9868.32,
+    "equity": 9868.32,
+    "free_margin": 9868.32,
+    "margin": 0.00
+  },
+  "open_trades": [
+
+  ],
+  "closed_trades": [
+    {"ticket":14211111,"symbol":"","type":6,"lots":0.01,"open_price":0.00000,"close_price":0.00000,"open_time":"2025.07.12 01:48","close_time":"2025.07.12 01:48","sl":null,"tp":null,"profit":10000.00,"swap":0.00,"commission":0.00,"comment":"Initial account balance"},
+    {"ticket":14211111,"symbol":"DOTUSD","type":0,"lots":1.00,"open_price":3.92600,"close_price":3.90900,"open_time":"2025.07.12 02:06","close_time":"2025.07.12 02:13","sl":null,"tp":null,"profit":-0.17,"swap":0.00,"commission":0.00,"comment":""},
+    {"ticket":14211111,"symbol":"LTCUSD","type":0,"lots":10.00,"open_price":92.94000,"close_price":91.44000,"open_time":"2025.07.12 16:14","close_time":"2025.07.12 16:42","sl":null,"tp":null,"profit":-15.00,"swap":0.00,"commission":0.00,"comment":""},
+    {"ticket":14211111,"symbol":"ADAUSD","type":1,"lots":10.00,"open_price":0.70500,"close_price":0.70470,"open_time":"2025.07.12 16:42","close_time":"2025.07.12 18:09","sl":0.74000,"tp":0.64000,"profit":0.30,"swap":0.00,"commission":0.00,"comment":""},
+    {"ticket":14211111,"symbol":"DOGEUSD","type":0,"lots":10.00,"open_price":0.19617,"close_price":0.19460,"open_time":"2025.07.12 18:06","close_time":"2025.07.12 18:09","sl":0.18000,"tp":0.21000,"profit":-15.70,"swap":0.00,"commission":0.00,"comment":""},
+    {"ticket":14211111,"symbol":"ADAUSD","type":1,"lots":10.00,"open_price":0.69910,"close_price":0.70370,"open_time":"2025.07.12 18:16","close_time":"2025.07.12 23:21","sl":0.70370,"tp":0.65000,"profit":-4.60,"swap":0.00,"commission":0.00,"comment":"[sl]"},
+    {"ticket":14211111,"symbol":"ADAUSD","type":1,"lots":100.00,"open_price":0.69810,"close_price":0.70370,"open_time":"2025.07.12 18:16","close_time":"2025.07.12 23:21","sl":0.70370,"tp":0.65000,"profit":-56.00,"swap":0.00,"commission":0.00,"comment":"[sl]"},
+    {"ticket":14211111,"symbol":"ADAUSD","type":1,"lots":100.00,"open_price":0.70020,"close_price":0.70410,"open_time":"2025.07.12 23:21","close_time":"2025.07.12 23:21","sl":0.70420,"tp":null,"profit":-39.00,"swap":0.00,"commission":0.00,"comment":"[sl]"},
+    {"ticket":14211111,"symbol":"DOGEUSD","type":0,"lots":1.00,"open_price":0.19571,"close_price":0.19420,"open_time":"2025.07.12 23:51","close_time":"2025.07.12 23:54","sl":null,"tp":null,"profit":-1.51,"swap":0.00,"commission":0.00,"comment":""}
+  ]
+}
+

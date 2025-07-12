@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard EA</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+</head>
+<body>
+  <header class="dashboard-header">
+    <div class="logo-container">
+      <div class="logo">D</div>
+      <div class="account-name" id="accountName">Chargement...</div>
+    </div>
+    <div class="header-buttons">
+      <button id="toggleFloat" style="display: none;">👁️ Infos</button>
+      <button id="toggleCurrency">💱 % / €</button>
+      <button id="darkModeToggle">🌙</button>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+    <!-- Container Gauche -->
+    <section class="info-container">
+      <button id="openStatsBtn" style="font-size:1.1rem; padding:10px 18px; cursor:pointer; border-radius:6px; border:none; background:#2196F3; color:#fff; user-select:none;">
+        📊 
+      </button>
+
+      <div id="statsPopup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+        <button class="closeBtn" aria-label="Fermer la fenêtre">×</button>
+        <h2 id="popupTitle">Statistiques du Compte</h2>
+
+        <div id="statsContent" style="display: none;">
+          <div id="accountInfo" class="account-float"></div>
+          <div id="statsInfo" class="account-float"></div>
+        </div>
+
+        <div id="chartsContainer">
+          <canvas id="marginChart"></canvas>
+          <canvas id="gainLossChart"></canvas>
+          <canvas id="bestWorstChart"></canvas>
+        </div>
+      </div>
+
+
+      <h2>Compte : </h2>
+      
+      <div id="accountInfo" class="account-float visible">
+        <p><strong>Balance :</strong> <span id="balance">0</span></p>
+        <p><strong>Equity :</strong> <span id="equity">0</span></p>
+        <p><strong>Free Margin :</strong> <span id="freeMargin">0</span></p>
+        <p><strong>Margin :</strong> <span id="margin">0</span></p>
+        <p><strong>Leverage :</strong> <span id="leverage">0</span>x</p>
+        <p><strong>Account Number :</strong> <span id="accountNumber">-</span></p>
+        <p><strong>Devise :</strong> <span id="currency">USD</span></p>
+      </div>
+      <h2>Stats : </h2>
+      <div id="statsInfo" class="account-float visible">
+        <p><strong>Capital :</strong> <span id="stat-capital">0</span></p>
+        <p><strong>RR moyen :</strong> <span id="stat-rr">0</span></p>
+        <p><strong>Best trade :</strong> <span id="stat-best">0</span></p>
+        <p><strong>Burk trade :</strong> <span id="stat-worst">0</span></p>
+        <p><strong>Moyenne gain :</strong> <span id="stat-gain">0</span>x</p>
+        <p><strong>Moyenne perte :</strong> <span id="stat-loss">-</span></p>
+        <p><strong>Drowdawn actuelle :</strong> <span id="stat-dd">-</span></p>
+      </div>
+
+
+    </section>
+
+    <!-- Container Droit -->
+    <section class="config-container">
+      <h2>Configuration</h2>
+      <div class="config-section" id="closeBlocSection">
+        <h3>Option racine</h3>
+        <div class="config-row">
+          <label for="closeBloc_allTrade">Close Bloc All Trade</label>
+          <input type="checkbox" id="closeBloc_allTrade" />
+        </div>
+      </div>
+      <div class="config-section" id="autoStopLossSection">
+        <h3>Auto Stop Loss</h3>
+        <div class="config-row">
+          <label for="autoStopLoss_enabled">Activé</label>
+          <input type="checkbox" id="autoStopLoss_enabled" />
+        </div>
+        <div class="config-row">
+          <label for="autoStopLoss_distance">Distance pips</label>
+          <input type="number" id="autoStopLoss_distance" min="0" />
+        </div>
+      </div>
+
+      <div class="config-section" id="trailingStopSection">
+        <h3>Trailing Stop</h3>
+        <div class="config-row">
+          <label for="trailingStop_enabled">Activé</label>
+          <input type="checkbox" id="trailingStop_enabled" />
+        </div>
+        <div class="config-row">
+          <label for="trailingStop_distance">Distance pips</label>
+          <input type="number" id="trailingStop_distance" min="0" />
+        </div>
+      </div>
+
+      <div id="configStatus" class="status-message"></div>
+
+    </section>
+  </main>
+  <section class="open-trades-container">
+  <h2>Trades Ouverts</h2>
+  <div id="openTradesList">
+    <!-- Les trades ouverts seront injectés ici -->
+    <p>Chargement des trades ouverts...</p>
+  </div>
+  </section>
+
+  <section class="close-trades-container">
+  <h2>Tableau trade fermer</h2>
+  <div id="CLoseTradesGraph">
+    <!-- Les trades ouverts seront injectés ici -->
+    <p>Chargement des trades fermer...</p>
+    <canvas id="capitalChart" width="800" height="400"></canvas>
+
+  </div>
+  </section>
+
+
+  <section class="listClose-trades-container">
+    <h2>Liste trade fermer</h2>
+    <div id="CLoseTradesList">
+      <p>Chargement des trades fermer...</p>
+    </div>
+  </section>
+
+
+  <script src="/static/script.js"></script>
+  
+</body>
+</html>

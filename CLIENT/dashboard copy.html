@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Trading - Analyse avancée</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@2.0.2/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --dark: #1e1e2c;
+            --light: #f8f9fa;
+            --card-bg: #ffffff;
+            --body-bg: #f0f2f5;
+            --text: #333333;
+            --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --symbol-colors: #4361ee, #4cc9f0, #7209b7, #f72585, #f8961e, #43aa8b, #577590;
+        }
+
+        .dark-mode {
+            --primary: #4cc9f0;
+            --secondary: #4361ee;
+            --dark: #121212;
+            --light: #1e1e2c;
+            --card-bg: #252525;
+            --body-bg: #121212;
+            --text: #f0f0f0;
+            --border: #444444;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--success));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(45deg, var(--primary), var(--success));
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px var(--shadow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 30px var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .account-info {
+            grid-column: span 4;
+        }
+
+        .account-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            padding: 15px;
+            border-radius: 15px;
+            background-color: var(--body-bg);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text);
+            opacity: 0.8;
+        }
+
+        .hide-capital .stat-value {
+            filter: blur(8px);
+            user-select: none;
+        }
+
+        .config-section {
+            grid-column: span 4;
+        }
+
+        .config-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            background-color: var(--body-bg);
+        }
+
+        .config-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .config-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .switch-small {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch-small .slider:before {
+            height: 18px;
+            width: 18px;
+        }
+
+        input:checked + .slider-small:before {
+            transform: translateX(26px);
+        }
+
+        .chart-section {
+            grid-column: span 8;
+            height: 400px;
+        }
+
+        .trades-section {
+            grid-column: span 12;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--body-bg);
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        tr:hover {
+            background-color: var(--body-bg);
+        }
+
+        .rr-positive {
+            color: #43aa8b;
+            font-weight: 600;
+        }
+
+        .rr-negative {
+            color: #f72585;
+            font-weight: 600;
+        }
+
+        .rr-neutral {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .comments-section {
+            grid-column: span 12;
+        }
+
+        .comment-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            background: var(--body-bg);
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background-color: var(--card-bg);
+            color: var(--text);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .comments-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .comment-card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 15px var(--shadow);
+            position: relative;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comment-symbol {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .comment-date {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .comment-text {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .action-btn:hover {
+            opacity: 1;
+        }
+
+        .rating {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .rating-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .rating-value {
+            font-weight: 600;
+            color: var(--warning);
+        }
+
+        .symbol-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background-color: var(--card-bg);
+            color: var(--text);
+            box-shadow: 0 5px 20px var(--shadow);
+            transform: translateX(120%);
+            transition: transform 0.4s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: #43aa8b;
+        }
+
+        .notification.error {
+            border-left-color: #f72585;
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            color: var(--text);
+            opacity: 0.7;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            
+            .account-info, .config-section, .chart-section {
+                grid-column: span 1;
+            }
+            
+            .comment-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">$</div>
+                <h1>Dashboard Trading</h1>
+            </div>
+            <div class="controls">
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider"></span>
+                </label>
+                <button class="btn" id="hideCapitalBtn">Masquer le capital</button>
+                <button class="btn" id="refreshBtn">Actualiser</button>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Section Compte -->
+            <div class="card account-info">
+                <div class="card-header">
+                    <h2 class="card-title">Informations du compte</h2>
+                </div>
+                <div id="accountDetails">
+                    <div class="account-stats">
+                        <div class="stat">
+                            <div class="stat-label">Solde</div>
+                            <div class="stat-value" id="balance">Chargement...</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Equity</div>
+                            <div class="stat-value" id="equity">Chargement...</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Marge libre</div>
+                            <div class="stat-value" id="freeMargin">Chargement...</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Marge utilisée</div>
+                            <div class="stat-value" id="margin">Chargement...</div>
+                        </div>
+                    </div>
+                    <div class="account-meta">
+                        <p><strong>Nom:</strong> <span id="accountName">-</span></p>
+                        <p><strong>Devise:</strong> <span id="currency">-</span></p>
+                        <p><strong>Effet de levier:</strong> <span id="leverage">-</span></p>
+                        <p><strong>Numéro de compte:</strong> <span id="accountNumber">-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Configuration -->
+            <div class="card config-section">
+                <div class="card-header">
+                    <h2 class="card-title">Configuration du trading</h2>
+                </div>
+                <div id="configContent">
+                    <div class="config-item">
+                        <div class="config-title">Fermeture globale des trades</div>
+                        <div class="config-controls">
+                            <label class="switch switch-small">
+                                <input type="checkbox" id="closeAllTrades">
+                                <span class="slider"></span>
+                            </label>
+                            <span id="closeAllStatus">Désactivé</span>
+                        </div>
+                    </div>
+                    
+                    <div class="config-item">
+                        <div class="config-title">Stop Loss Automatique</div>
+                        <div class="config-controls">
+                            <label class="switch switch-small">
+                                <input type="checkbox" id="autoStopLossEnabled">
+                                <span class="slider"></span>
+                            </label>
+                            <span id="autoStopLossStatus">Activé</span>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Distance (pips)</label>
+                            <input type="number" id="autoStopLossPips" min="1" value="20">
+                        </div>
+                    </div>
+                    
+                    <div class="config-item">
+                        <div class="config-title">Trailing Stop</div>
+                        <div class="config-controls">
+                            <label class="switch switch-small">
+                                <input type="checkbox" id="trailingStopEnabled">
+                                <span class="slider"></span>
+                            </label>
+                            <span id="trailingStopStatus">Désactivé</span>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Distance (pips)</label>
+                            <input type="number" id="trailingStopPips" min="1" value="15">
+                        </div>
+                    </div>
+                    
+                    <button class="btn" id="saveConfigBtn">Enregistrer la configuration</button>
+                </div>
+            </div>
+
+            <!-- Section Graphique -->
+            <div class="card chart-section">
+                <div class="card-header">
+                    <h2 class="card-title">Historique des trades</h2>
+                    <div>
+                        <select id="symbolFilter">
+                            <option value="all">Tous les symboles</option>
+                        </select>
+                    </div>
+                </div>
+                <canvas id="tradesChart"></canvas>
+            </div>
+
+            <!-- Section Trades -->
+            <div class="card trades-section">
+                <div class="card-header">
+                    <h2 class="card-title">Détail des trades</h2>
+                    <div>
+                        <span>RR Moyen: <span id="avgRR">0.00</span></span>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="tradesTable">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Symbole</th>
+                                <th>Type</th>
+                                <th>Volume</th>
+                                <th>Prix d'entrée</th>
+                                <th>Prix de sortie</th>
+                                <th>Heure d'ouverture</th>
+                                <th>Heure de fermeture</th>
+                                <th>Profit</th>
+                                <th>RR</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesTableBody">
+                            <tr>
+                                <td colspan="11" style="text-align: center;">Chargement des données...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section Commentaires -->
+            <div class="card comments-section">
+                <div class="card-header">
+                    <h2 class="card-title">Commentaires & Analyse</h2>
+                </div>
+                
+                <div class="comment-form">
+                    <div>
+                        <div class="form-group">
+                            <label for="tradeSelect">Trade</label>
+                            <select id="tradeSelect">
+                                <option value="">Sélectionner un trade</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="commentText">Commentaire</label>
+                            <textarea id="commentText" placeholder="Votre analyse..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="expectation">Attente pré-trade</label>
+                            <textarea id="expectation" placeholder="Votre attente avant le trade..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="form-group">
+                            <label for="satisfaction">Satisfaction (0-5)</label>
+                            <input type="number" id="satisfaction" min="0" max="5" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="confidence">Confiance (0-5)</label>
+                            <input type="number" id="confidence" min="0" max="5" value="0">
+                        </div>
+                        <button class="btn" id="addCommentBtn">Ajouter un commentaire</button>
+                        <div style="margin-top: 20px; background: var(--card-bg); padding: 15px; border-radius: 10px;">
+                            <p><strong>Note:</strong> Les commentaires sont associés aux trades par leur numéro de ticket.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comments-container" id="commentsContainer">
+                    <!-- Les commentaires seront chargés ici dynamiquement -->
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Dashboard Trading &copy; 2025 - Analyse avancée des performances</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification">
+        <div class="notification-icon">✓</div>
+        <div class="notification-content">Opération réussie</div>
+    </div>
+
+    <script>
+        // Variables globales
+        let tradesData = [];
+        let commentsData = {};
+        let configData = {};
+        let accountData = {};
+        let symbolColors = {};
+        let hideCapital = false;
+        
+        // DOM Elements
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const hideCapitalBtn = document.getElementById('hideCapitalBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const tradesChart = document.getElementById('tradesChart');
+        const symbolFilter = document.getElementById('symbolFilter');
+        const saveConfigBtn = document.getElementById('saveConfigBtn');
+        const addCommentBtn = document.getElementById('addCommentBtn');
+        const notification = document.getElementById('notification');
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            // Charger les données initiales
+            loadAccountData();
+            loadTradesData();
+            loadConfigData();
+            loadCommentsData();
+            
+            // Configurer les écouteurs d'événements
+            setupEventListeners();
+            
+            // Configurer le graphique
+            initChart();
+        });
+        
+        function setupEventListeners() {
+            // Dark mode toggle
+            darkModeToggle.addEventListener('change', function() {
+                document.body.classList.toggle('dark-mode', this.checked);
+            });
+            
+            // Masquer/afficher le capital
+            hideCapitalBtn.addEventListener('click', function() {
+                hideCapital = !hideCapital;
+                this.textContent = hideCapital ? "Afficher le capital" : "Masquer le capital";
+                document.getElementById('accountDetails').classList.toggle('hide-capital', hideCapital);
+            });
+            
+            // Actualiser les données
+            refreshBtn.addEventListener('click', function() {
+                loadAccountData();
+                loadTradesData();
+                loadConfigData();
+                loadCommentsData();
+                showNotification("Données actualisées avec succès", "success");
+            });
+            
+            // Enregistrer la configuration
+            saveConfigBtn.addEventListener('click', saveConfig);
+            
+            // Ajouter un commentaire
+            addCommentBtn.addEventListener('click', addComment);
+            
+            // Filtrer le graphique par symbole
+            symbolFilter.addEventListener('change', updateChart);
+        }
+        
+        // Fonctions pour charger les données depuis les endpoints
+        async function loadAccountData() {
+            try {
+                const response = await fetch('/api/trades');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    accountData = data.data.account;
+                    updateAccountUI();
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement des données du compte');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors du chargement des données du compte: " + error.message, "error");
+            }
+        }
+        
+        async function loadTradesData() {
+            try {
+                const response = await fetch('/api/trades');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    tradesData = [
+                        ...(data.data.open_trades || []),
+                        ...(data.data.closed_trades || [])
+                    ];
+                    
+                    // Calculer le RR pour chaque trade
+                    tradesData.forEach(trade => {
+                        trade.rrRatio = calculateRR(trade);
+                    });
+                    
+                    // Calculer le RR moyen
+                    const validRRs = tradesData.filter(t => t.rrRatio !== null).map(t => t.rrRatio);
+                    const avgRR = validRRs.length > 0 ? 
+                        (validRRs.reduce((a, b) => a + b, 0) / validRRs.length).toFixed(2) : 
+                        '0.00';
+                    document.getElementById('avgRR').textContent = avgRR;
+                    
+                    updateTradesTable();
+                    updateTradeSelect();
+                    updateSymbolFilter();
+                    updateChart();
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement des trades');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors du chargement des trades: " + error.message, "error");
+            }
+        }
+        
+        async function loadConfigData() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    configData = data.data.config;
+                    updateConfigUI();
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement de la configuration');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors du chargement de la configuration: " + error.message, "error");
+            }
+        }
+        
+        async function loadCommentsData() {
+            try {
+                const response = await fetch('/api/comments');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    commentsData = data.data.comments || {};
+                    updateCommentsUI();
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement des commentaires');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors du chargement des commentaires: " + error.message, "error");
+            }
+        }
+        
+        // Fonctions pour mettre à jour l'UI
+        function updateAccountUI() {
+            document.getElementById('accountName').textContent = accountData.name;
+            document.getElementById('currency').textContent = accountData.currency;
+            document.getElementById('leverage').textContent = '1:' + accountData.leverage;
+            document.getElementById('accountNumber').textContent = accountData.number;
+            
+            document.getElementById('balance').textContent = accountData.balance.toFixed(2);
+            document.getElementById('equity').textContent = accountData.equity.toFixed(2);
+            document.getElementById('freeMargin').textContent = accountData.free_margin.toFixed(2);
+            document.getElementById('margin').textContent = accountData.margin.toFixed(2);
+        }
+        
+        function updateTradesTable() {
+            const tableBody = document.getElementById('tradesTableBody');
+            tableBody.innerHTML = '';
+            
+            if (tradesData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="11" style="text-align: center;">Aucun trade trouvé</td></tr>';
+                return;
+            }
+            
+            tradesData.forEach(trade => {
+                const row = document.createElement('tr');
+                
+                // Déterminer la classe RR pour le style
+                let rrClass = 'rr-neutral';
+                if (trade.rrRatio !== null) {
+                    if (trade.rrRatio > 1) rrClass = 'rr-positive';
+                    else if (trade.rrRatio < 1 && trade.rrRatio > 0) rrClass = 'rr-negative';
+                }
+                
+                // Obtenir la couleur du symbole
+                const color = getSymbolColor(trade.symbol);
+                const colorStyle = `style="background-color: ${color}"`;
+                
+                row.innerHTML = `
+                    <td>${trade.ticket}</td>
+                    <td><span class="symbol-color" ${colorStyle}></span>${trade.symbol}</td>
+                    <td>${trade.type === 0 ? 'Achat' : 'Vente'}</td>
+                    <td>${trade.lots}</td>
+                    <td>${trade.open_price?.toFixed(5) || '-'}</td>
+                    <td>${trade.close_price?.toFixed(5) || '-'}</td>
+                    <td>${trade.open_time || '-'}</td>
+                    <td>${trade.close_time || '-'}</td>
+                    <td class="${trade.profit >= 0 ? 'rr-positive' : 'rr-negative'}">${trade.profit?.toFixed(2) || '-'}</td>
+                    <td class="${rrClass}">${trade.rrRatio !== null ? trade.rrRatio.toFixed(2) : '-'}</td>
+                    <td>
+                        <button class="btn btn-outline view-comment" data-ticket="${trade.ticket}">Voir</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Ajouter les écouteurs pour les boutons "Voir"
+            document.querySelectorAll('.view-comment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ticket = this.getAttribute('data-ticket');
+                    showCommentForTrade(ticket);
+                });
+            });
+        }
+        
+        function updateConfigUI() {
+            document.getElementById('closeAllTrades').checked = configData.closeBloc_allTrade;
+            document.getElementById('closeAllStatus').textContent = configData.closeBloc_allTrade ? "Activé" : "Désactivé";
+            
+            document.getElementById('autoStopLossEnabled').checked = configData.auto_stop_loss.enabled;
+            document.getElementById('autoStopLossStatus').textContent = configData.auto_stop_loss.enabled ? "Activé" : "Désactivé";
+            document.getElementById('autoStopLossPips').value = configData.auto_stop_loss.distance_pips;
+            
+            document.getElementById('trailingStopEnabled').checked = configData.trailing_stop.enabled;
+            document.getElementById('trailingStopStatus').textContent = configData.trailing_stop.enabled ? "Activé" : "Désactivé";
+            document.getElementById('trailingStopPips').value = configData.trailing_stop.distance_pips;
+        }
+        
+        function updateCommentsUI() {
+            const container = document.getElementById('commentsContainer');
+            container.innerHTML = '';
+            
+            if (Object.keys(commentsData).length === 0) {
+                container.innerHTML = '<p>Aucun commentaire disponible</p>';
+                return;
+            }
+            
+            // Trier les commentaires par date (du plus récent au plus ancien)
+            const sortedComments = Object.entries(commentsData)
+                .sort((a, b) => new Date(b[1].date) - new Date(a[1].date));
+            
+            sortedComments.forEach(([ticket, comment]) => {
+                // Trouver le trade correspondant pour obtenir le symbole
+                const trade = tradesData.find(t => t.ticket == ticket);
+                const symbol = trade ? trade.symbol : 'Inconnu';
+                const color = trade ? getSymbolColor(symbol) : '#999';
+                
+                const commentCard = document.createElement('div');
+                commentCard.className = 'comment-card';
+                commentCard.innerHTML = `
+                    <div class="comment-header">
+                        <div>
+                            <span class="comment-symbol" style="color: ${color}">${symbol}</span>
+                            <div>Ticket: ${ticket}</div>
+                        </div>
+                        <div class="comment-date">${comment.date}</div>
+                        <div class="comment-actions">
+                            <button class="action-btn edit-comment" data-ticket="${ticket}">✏️</button>
+                            <button class="action-btn delete-comment" data-ticket="${ticket}">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="comment-text">${comment.text || 'Aucun commentaire'}</div>
+                    ${comment.attente ? `<div class="comment-text"><strong>Attente:</strong> ${comment.attente}</div>` : ''}
+                    <div class="rating">
+                        <div class="rating-item">
+                            <span>Satisfaction:</span>
+                            <span class="rating-value">${comment.satisfaction}/5</span>
+                        </div>
+                        <div class="rating-item">
+                            <span>Confiance:</span>
+                            <span class="rating-value">${comment.confiance}/5</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(commentCard);
+            });
+            
+            // Ajouter les écouteurs pour les boutons d'édition/suppression
+            document.querySelectorAll('.edit-comment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ticket = this.getAttribute('data-ticket');
+                    editComment(ticket);
+                });
+            });
+            
+            document.querySelectorAll('.delete-comment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ticket = this.getAttribute('data-ticket');
+                    deleteComment(ticket);
+                });
+            });
+        }
+        
+        function updateTradeSelect() {
+            const select = document.getElementById('tradeSelect');
+            select.innerHTML = '<option value="">Sélectionner un trade</option>';
+            
+            // Ajouter uniquement les trades fermés qui n'ont pas encore de commentaire
+            tradesData
+                .filter(trade => trade.close_time && !commentsData[trade.ticket])
+                .forEach(trade => {
+                    const option = document.createElement('option');
+                    option.value = trade.ticket;
+                    option.textContent = `[${trade.symbol}] ${trade.ticket} - ${trade.close_time} (${trade.profit >= 0 ? '+' : ''}${trade.profit?.toFixed(2)})`;
+                    select.appendChild(option);
+                });
+        }
+        
+        function updateSymbolFilter() {
+            symbolFilter.innerHTML = '<option value="all">Tous les symboles</option>';
+            
+            // Obtenir tous les symboles uniques
+            const symbols = [...new Set(tradesData.map(trade => trade.symbol))];
+            
+            symbols.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.textContent = symbol;
+                symbolFilter.appendChild(option);
+            });
+        }
+        
+        // Fonctions pour le graphique
+        function initChart() {
+            const ctx = tradesChart.getContext('2d');
+            window.tradesChartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'dd/MM/yyyy HH:mm'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Prix'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const trade = context.raw.trade;
+                                    return [
+                                        `Symbole: ${trade.symbol}`,
+                                        `Type: ${trade.type === 0 ? 'Achat' : 'Vente'}`,
+                                        `Prix: ${trade.open_price?.toFixed(5)}`,
+                                        `Profit: ${trade.profit?.toFixed(2)}`,
+                                        `RR: ${trade.rrRatio?.toFixed(2) || '-'}`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateChart() {
+            const selectedSymbol = symbolFilter.value;
+            const filteredTrades = selectedSymbol === 'all' ? 
+                tradesData : 
+                tradesData.filter(trade => trade.symbol === selectedSymbol);
+            
+            // Grouper les trades par symbole
+            const tradesBySymbol = {};
+            filteredTrades.forEach(trade => {
+                if (!tradesBySymbol[trade.symbol]) {
+                    tradesBySymbol[trade.symbol] = [];
+                }
+                tradesBySymbol[trade.symbol].push(trade);
+            });
+            
+            // Créer les datasets pour Chart.js
+            const datasets = Object.entries(tradesBySymbol).map(([symbol, trades]) => {
+                return {
+                    label: symbol,
+                    data: trades.map(trade => ({
+                        x: parseTradeDate(trade.close_time || trade.open_time),
+                        y: trade.open_price,
+                        trade: trade
+                    })),
+                    backgroundColor: getSymbolColor(symbol),
+                    pointRadius: 8,
+                    pointHoverRadius: 10
+                };
+            });
+            
+            // Mettre à jour le graphique
+            window.tradesChartInstance.data.datasets = datasets;
+            window.tradesChartInstance.update();
+        }
+        
+        // Fonctions utilitaires
+        function calculateRR(trade) {
+            if (!trade.sl || !trade.tp || trade.open_price === undefined) {
+                return null;
+            }
+            
+            const entry = trade.open_price;
+            const stopLoss = trade.sl;
+            const takeProfit = trade.tp;
+            
+            if (trade.type === 0) { // Achat
+                const risk = entry - stopLoss;
+                const reward = takeProfit - entry;
+                return risk > 0 ? reward / risk : null;
+            } else { // Vente
+                const risk = stopLoss - entry;
+                const reward = entry - takeProfit;
+                return risk > 0 ? reward / risk : null;
+            }
+        }
+        
+        function getSymbolColor(symbol) {
+            if (!symbolColors[symbol]) {
+                // Générer une couleur basée sur le hash du symbole
+                const colors = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--symbol-colors')
+                    .split(',')
+                    .map(c => c.trim());
+                
+                const hash = Array.from(symbol).reduce((acc, char) => 
+                    acc + char.charCodeAt(0), 0);
+                
+                symbolColors[symbol] = colors[hash % colors.length];
+            }
+            return symbolColors[symbol];
+        }
+        
+        function parseTradeDate(dateStr) {
+            if (!dateStr) return new Date();
+            
+            // Format: "2025.07.09 16:48"
+            const [datePart, timePart] = dateStr.split(' ');
+            const [year, month, day] = datePart.split('.');
+            const [hour, minute] = timePart.split(':');
+            
+            return new Date(year, month - 1, day, hour, minute);
+        }
+        
+        function showNotification(message, type = "success") {
+            const notification = document.getElementById('notification');
+            notification.querySelector('.notification-content').textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Fonctions pour les actions utilisateur
+        async function saveConfig() {
+            const newConfig = {
+                closeBloc_allTrade: document.getElementById('closeAllTrades').checked,
+                auto_stop_loss: {
+                    enabled: document.getElementById('autoStopLossEnabled').checked,
+                    distance_pips: parseInt(document.getElementById('autoStopLossPips').value)
+                },
+                trailing_stop: {
+                    enabled: document.getElementById('trailingStopEnabled').checked,
+                    distance_pips: parseInt(document.getElementById('trailingStopPips').value)
+                }
+            };
+            
+            try {
+                const response = await fetch('/api/config/edit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newConfig)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification("Configuration enregistrée avec succès", "success");
+                    loadConfigData();
+                } else {
+                    throw new Error(data.message || 'Erreur lors de la sauvegarde de la configuration');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors de la sauvegarde: " + error.message, "error");
+            }
+        }
+        
+        async function addComment() {
+            const tradeSelect = document.getElementById('tradeSelect');
+            const ticket = tradeSelect.value;
+            
+            if (!ticket) {
+                showNotification("Veuillez sélectionner un trade", "error");
+                return;
+            }
+            
+            const comment = {
+                id: ticket,
+                text: document.getElementById('commentText').value,
+                satisfaction: parseInt(document.getElementById('satisfaction').value),
+                confiance: parseInt(document.getElementById('confidence').value),
+                attente: document.getElementById('expectation').value
+            };
+            
+            try {
+                const response = await fetch('/api/config/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(comment)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification("Commentaire ajouté avec succès", "success");
+                    // Réinitialiser le formulaire
+                    document.getElementById('commentText').value = '';
+                    document.getElementById('expectation').value = '';
+                    document.getElementById('satisfaction').value = 0;
+                    document.getElementById('confidence').value = 0;
+                    tradeSelect.value = '';
+                    
+                    // Recharger les commentaires
+                    loadCommentsData();
+                    updateTradeSelect();
+                } else {
+                    throw new Error(data.message || 'Erreur lors de l\'ajout du commentaire');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors de l'ajout du commentaire: " + error.message, "error");
+            }
+        }
+        
+        function showCommentForTrade(ticket) {
+            const comment = commentsData[ticket];
+            if (!comment) {
+                showNotification("Aucun commentaire pour ce trade", "error");
+                return;
+            }
+            
+            // Trouver l'élément de commentaire correspondant et le mettre en surbrillance
+            const commentCard = document.querySelector(`.comment-card:has(.edit-comment[data-ticket="${ticket}"])`);
+            if (commentCard) {
+                commentCard.style.border = "2px solid var(--primary)";
+                commentCard.style.boxShadow = "0 0 15px rgba(67, 97, 238, 0.5)";
+                
+                // Faire défiler jusqu'au commentaire
+                commentCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Retirer la mise en surbrillance après 3 secondes
+                setTimeout(() => {
+                    commentCard.style.border = "1px solid var(--border)";
+                    commentCard.style.boxShadow = "0 4px 15px var(--shadow)";
+                }, 3000);
+            }
+        }
+        
+        async function editComment(ticket) {
+            const comment = commentsData[ticket];
+            if (!comment) return;
+            
+            const newText = prompt("Modifier le commentaire:", comment.text);
+            if (newText === null) return; // Annulation
+            
+            const newSatisfaction = prompt("Nouvelle satisfaction (0-5):", comment.satisfaction);
+            const newConfiance = prompt("Nouvelle confiance (0-5):", comment.confiance);
+            const newAttente = prompt("Modifier l'attente:", comment.attente);
+            
+            const updatedComment = {
+                id: ticket,
+                text: newText,
+                satisfaction: parseInt(newSatisfaction),
+                confiance: parseInt(newConfiance),
+                attente: newAttente
+            };
+            
+            try {
+                const response = await fetch('/api/comments/edit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedComment)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification("Commentaire modifié avec succès", "success");
+                    loadCommentsData();
+                } else {
+                    throw new Error(data.message || 'Erreur lors de la modification du commentaire');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors de la modification: " + error.message, "error");
+            }
+        }
+        
+        async function deleteComment(ticket) {
+            if (!confirm("Êtes-vous sûr de vouloir supprimer ce commentaire ?")) return;
+            
+            try {
+                const response = await fetch('/api/comments/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: ticket })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification("Commentaire supprimé avec succès", "success");
+                    loadCommentsData();
+                    updateTradeSelect();
+                } else {
+                    throw new Error(data.message || 'Erreur lors de la suppression du commentaire');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification("Erreur lors de la suppression: " + error.message, "error");
+            }
+        }
+    </script>
+</body>
+</html>
