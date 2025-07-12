@@ -161,10 +161,6 @@ Vous pouvez l'utiliser, l’adapter et le partager librement **à condition de n
 
 
 
-## 👤 Auteur
-
-- **Discord** : `Theglitch_is`
-
 
 
 
@@ -186,3 +182,7 @@ Le trading comporte des risques importants de perte. Il est fortement recommand�
 
 
 💼 Usage commercial ou acquisition du projet : me contacter.
+## 👤 Auteur
+
+- **Discord** : `Theglitch_is`
+
