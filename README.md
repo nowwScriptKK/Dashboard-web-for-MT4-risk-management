@@ -15,7 +15,7 @@ Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une co
 
 
 <center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture_1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
-
+⚠️Le projet et fait pour tourner en local.
 
 ---
 
