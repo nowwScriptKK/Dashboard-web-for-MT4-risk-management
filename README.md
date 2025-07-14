@@ -18,6 +18,17 @@ Un seul fichier à configurer après avoir installer python : config.cmd
 
 Dans le script MQ4 vous pouvez modifier la mise à jour des données de trade, actuellement 5 secondes.
 
+Mise à jour a venir : 
+
+Fermer les trades ouvert(Ready)
+
+Ajouter un TP/SL(Ready)
+
+Selectionner sont RR pour la selection TP/SL
+
+Très certainement un passage de JSON à SQL pour réduire le temps d'écriture et avoir un suivis avec des mise à jour plus dinamyque 
+
+
 <br>
 
 
