@@ -26,9 +26,9 @@ Ajouter un TP/SL(Ready)
 
 Selectionner sont RR pour la selection TP/SL
 
-Très certainement un passage de JSON à noSQL pour réduire le temps d'écriture et avoir un suivis avec des mise à jour plus dinamyque 
+Très certainement un passage de JSON à noSQL pour réduire le temps d'écriture et avoir un suivis avec des mises à jour plus dinamyque 
 
-Prise de prosition avec stratégie avec stratégie de Fibonacci, Ichimoku(Après le passage a noSQL)
+Prise de prosition avec stratégie Fibonacci, Ichimoku(...)(Après le passage a noSQL)
 <br>
 
 
