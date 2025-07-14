@@ -18,7 +18,7 @@ Un seul fichier à configurer après avoir installer python : config.cmd
 
 Dans le script MQ4 vous pouvez modifier la mise à jour des données de trade, actuellement 5 secondes.
 
-## Mise à jour a venir à venir :  
+## Mise à jour a venir :  
 
 Fermer les trades ouvert(Ready)
 
