@@ -24,9 +24,12 @@ Fermer les trades ouvert(Ready)
 
 Ajouter un TP/SL(Ready)
 
+Compatibilité MT4 et MT5(ready)
+
+Très certainement un passage de JSON à noSQL pour réduire le temps d'écriture et avoir un suivis avec des mises à jour plus dinamyque (en cours)
+
 Selectionner sont RR pour la selection TP/SL
 
-Très certainement un passage de JSON à noSQL pour réduire le temps d'écriture et avoir un suivis avec des mises à jour plus dinamyque 
 
 Prise de prosition avec stratégie Fibonacci, Ichimoku(...)(Après le passage a noSQL)
 <br>
