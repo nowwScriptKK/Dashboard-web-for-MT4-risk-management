@@ -20,18 +20,12 @@ Dans le script MQ4 vous pouvez modifier la mise à jour des données de trade, a
 
 ## Mise à jour a venir :  
 
-Fermer les trades ouvert(Ready)
-
-Ajouter un TP/SL(Ready)
-
-Compatibilité MT4 et MT5(ready)
-
-Très certainement un passage de JSON à noSQL pour réduire le temps d'écriture et avoir un suivis avec des mises à jour plus dinamyque (en cours)
-
-Selectionner sont RR pour la selection TP/SL
+Convertion de JSON à sqlite ok push demain
+Le front et les endpoint de base renvoie les mêmes données
+Mise à jour du script MQ4 avec local.host pour les requêtes
+Toutes les fonction réabilité 
 
 
-Prise de prosition avec stratégie Fibonacci, Ichimoku(...)(Après le passage a noSQL)
 <br>
 
 
