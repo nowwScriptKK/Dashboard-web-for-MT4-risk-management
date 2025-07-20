@@ -21,9 +21,14 @@ Dans le script MQ4 vous pouvez modifier la mise à jour des données de trade, a
 ## Mise à jour a venir :  
 
 Convertion de JSON à sqlite ok push demain
+
 Le front et les endpoint de base renvoie les mêmes données
+
 Mise à jour du script MQ4 avec local.host pour les requêtes
+
 Toutes les fonction réabilité 
+
+Grâce à cette mise à jour il y a un gain de + de 200% de traitement de 4 secondes avec la version JSON a <0.5s(Pas d'écriture depuis MT4, gestion de requête pour empêcher les surchargement)
 
 
 <br>
