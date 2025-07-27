@@ -6,8 +6,8 @@
 ### ✅ Changements récents :
 - **Passage complet de JSON à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
 - **Refonte complète des API** avec ajout d’endpoints pour la **modification, l’ajout et la suppression** des données via l’interface, l'interface client n'a pas changé et les données récupérer par le JS sont exactement les mêmes que pour le JSON.
-- **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, en fonction de vos ressources.
-- **Mise à jour du fichier cmd** : Ajout d'une configuration de fichier "host" pour ajouté local.host à 127.0.0.1(necessaire pour MT4).
+- **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, en fonction de vos ressources, avec le nombre de requête il est éventuellement possible de décendre à 0.1s/MAJ.
+- **Mise à jour du fichier cmd** : Ajout d'une configuration de modification fichier "host" pour ajouté local.host à 127.0.0.1(necessaire pour MT4).
 
 ### 🧪 Fonctionnalités expérimentales :
 - **Incrémentation d’un LLM en cours de test** (non inclus dans cette version – manque de tests concluants, en local avec une petite machine le LLM a du mal a faire des retours rapdie).
