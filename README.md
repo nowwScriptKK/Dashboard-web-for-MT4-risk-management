@@ -1,3 +1,30 @@
+---
+
+## 🆕 Mise à jour majeure
+
+### ✅ Changements récents :
+- **Passage complet de la base de données à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
+- **Refonte complète des API** avec ajout d’endpoints pour la **modification, l’ajout et la suppression** des données via l’interface.
+- **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, et probablement encore optimisable.
+- **Mise à jour du fichier cmd ** : Ajout d'une configuration de fichier host pour ajouté local.host à 127.0.0.1(necessaire pour MT4).
+
+### 🧪 Fonctionnalités expérimentales :
+- **Incrémentation d’un LLM en cours de test** (non inclus dans cette version – manque de tests concluants).
+
+### 🐞 Bugs connus :
+- Sur le script MT4, **le TP ne se met pas encore à jour automatiquement**. La correction arrive très prochainement.
+
+### ⚠️ Précautions à prendre :
+- Le fichier `.cmd` ajoute une redirection locale : `127.0.0.1` → `local.host`.
+- **MT4 ne prend pas en charge** les adresses `localhost`, `127.0.0.1`, `0.0.0.0`, etc.
+# L’utilisateur doit autoriser manuellement les requêtes vers l’endpoint `http://local.host/` dans MT4.
+
+### 🔜 Prochaine mise à jour prévue :
+- Correction du **TP non mis à jour dynamiquement** dans MT4.
+- **Refactorisation complète du JavaScript client** :
+  - Optimisation des calculs (notamment retrait du spread et des commissions dans le RR).
+  - Découpage des fonctions JS dans plusieurs fichiers pour **respecter l’architecture modulaire** du projet.
+
 # 💹 MT4 Web Dashboard
 
 Interface web complète de **gestion des trades** et de **l'analyse du risque** pour MetaTrader 4.
@@ -8,33 +35,43 @@ J'avais auparavant développé un outil basé sur l'IA pour MT4, mais il avait u
 
 Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une configuration simple, rapide, et modulaire. L’objectif est de poser des bases solides pour en faire un véritable outil de management du trading, avec des fonctionnalités avancées à venir — dont l’intégration progressive de l’IA.
 
-Portfolio : https://maxwimd.kesug.com/
-
-Il faut faut python 3.13 : https://www.python.org/downloads/release/python-3130/
-
-Un seul fichier à configurer après avoir installer python : config.cmd
+1 seul fichier à configurer après avoir installer python : config.cmd
 
 2 lancer l'expert advisor sur MT4
-
-Dans le script MQ4 vous pouvez modifier la mise à jour des données de trade, actuellement 5 secondes.
-
-## Mise à jour a venir :  
-
-Convertion de JSON à sqlite ok push demain
-
-Le front et les endpoint de base renvoie les mêmes données
-
-Mise à jour du script MQ4 avec local.host pour les requêtes
-
-Toutes les fonction réabilité 
-
-Grâce à cette mise à jour il y a un gain de + de 200% de traitement de 4 secondes avec la version JSON a <0.5s(Pas d'écriture depuis MT4, gestion de requête pour empêcher les surchargement)
-
-
 <br>
 
 
 <center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/Capture_1.PNG" style="text-align: center;" alt="Texte alternatif"></center>
+⚠️Le projet et fait pour tourner en local.
+
+---
+
+## 🔧 Technologies utilisées
+
+- **MQL4** : Expert Advisor pour MetaTrader 4 (extraction des données)
+- **Python Flask** : Serveur backend API
+- **HTML/CSS/JS** : Interface utilisateur
+- **JSON** : Stockage et échange des données
+
+---
+
+## 📡 Endpoints API
+
+| Endpoint | Description |
+|----------|-------------|
+| `api/tradesDB` | Récupère tous les trades (ouverts/fermés/Info du compte) |
+| `api/trades/editDB` | Edition de trade |
+| `api/trades/closesDB` | Ferme un trade ouvert |
+| `api/trades/add` | Ajouter un trade |
+| `api/commentsDB/` | Liste les commentaires |
+| `api/comments/addDB` | Ajout d’un commentaire |
+| `api/comments/editDB` | Modification d’un commentaire |
+| `api/comments/deleteDB` | Suppression d’un commentaire |
+| `api/configDB` | Récupère la configuration |
+| `api/config/editDB` | Édite la configuration |
+| `/api/capitalSB` | Récupère le capital |
+| `/api/account/update`  | Mise à jour de la table compte |
+---
 
 ## 💻 Fonctionnalités
 
@@ -63,8 +100,6 @@ Grâce à cette mise à jour il y a un gain de + de 200% de traitement de 4 seco
 
 ---
 
-⚠️Le projet et fait pour tourner en local.
-
 ## ⚙️ Configuration initiale
 
 ### Étapes :
@@ -92,35 +127,6 @@ Grâce à cette mise à jour il y a un gain de + de 200% de traitement de 4 seco
    - Autoriser les DLL et le trading automatique
 
 ---
-
----
-
-## 🔧 Technologies utilisées
-
-- **MQL4** : Expert Advisor pour MetaTrader 4 (extraction des données)
-- **Python Flask** : Serveur backend API
-- **HTML/CSS/JS** : Interface utilisateur
-- **JSON** : Stockage et échange des données
-
----
-
-## 📡 Endpoints API
-
-| Endpoint | Description |
-|----------|-------------|
-| `api/trades` | Récupère tous les trades (ouverts/fermés/Info du compte) |
-| `api/comments/` | Liste les commentaires |
-| `api/comments/add` | Ajout d’un commentaire |
-| `api/comments/edit` | Modification d’un commentaire |
-| `api/comments/delete` | Suppression d’un commentaire |
-| `api/config` | Récupère la configuration |
-| `api/config/edit` | Édite la configuration JSON |
-| `/api/capital` | Récupère le capital |
----
-
-
-
-
 
 
 ---
@@ -176,6 +182,10 @@ Vous pouvez l'utiliser, l’adapter et le partager librement **à condition de n
 
 
 
+## 👤 Auteur
+
+- **Discord** : `Theglitch_is`
+
 
 
 
@@ -192,12 +202,3 @@ Toute décision d'utilisation de ce logiciel ou d'exécution de trades automatis
 L'auteur ne saurait être tenu responsable des pertes financières, directes ou indirectes, pouvant résulter de l'utilisation de ce programme.
 
 Le trading comporte des risques importants de perte. Il est fortement recommandé de bien tester ce système sur compte démo avant toute utilisation en conditions réelles.
-
-
-
-
-💼 Usage commercial ou acquisition du projet : me contacter.
-## 👤 Auteur
-
-- **Telegram** : `https://t.me/Theglitchis`
-
