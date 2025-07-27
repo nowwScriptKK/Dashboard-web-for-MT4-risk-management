@@ -1,5 +1,5 @@
 ### ✅ Changement à venir :
-- **Correction script MQ4** Correction de la mise à jour du TP dans le script MQ4.
+- **Correction script MQ4** Correction de la mise à jour du TP suite a une modification manuel sur le trade dans le script MQ4.
 - **Refonte complète JavaScript** Correction de la mise à jour du des calcul RR etc côté javascript + refonte complète du script .js refactorisation pour avoir une cohérence complète avec l'architecture modulaire du projet.
 - **Ré-implémentation de l'automatisation de prise de trade** Suite a la dernière mise à jour les fonctionnalité de TP/SL, fermeture de toutes les positions etc on était temporairement mis en pause, il est necessaire de retaper le JS pour avoir une belle cohérence des données
 
