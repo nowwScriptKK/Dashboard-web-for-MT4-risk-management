@@ -26,7 +26,7 @@
 
 Interface web complète de **gestion des trades** et de **l'analyse du risque** pour MetaTrader 4.
 
-Ce projet permet de **visualiser, analyser et commenter vos positions de trading** en temps réel depuis une page web responsive. Il récupère automatiquement les données grâce à un **Expert Advisor MT4**, en exploitant un backend **Python Flask**, des fichiers **JSON**, et une interface **HTML/CSS/JS**.
+Ce projet permet de **visualiser, analyser et commenter vos positions de trading** en temps réel depuis une page web. Il récupère automatiquement les données grâce à un **Expert Advisor MT4**, en exploitant un backend **Python Flask**, des fichiers **JSON**, et une interface **HTML/CSS/JS**.
 
 J'avais auparavant développé un outil basé sur l'IA pour MT4, mais il avait une architecture complexe et pas maintenable avec une multitude de dépendances externes, rendant son installation longue et fastidieuse.
 
