@@ -1,6 +1,3 @@
----
-
-## 🆕 Mise à jour majeure
 
 ### ✅ Changements récents :
 - **Passage complet de la base de données à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
