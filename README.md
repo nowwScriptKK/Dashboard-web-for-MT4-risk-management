@@ -4,7 +4,7 @@
 - **Ré-implémentation de l'automatisation de prise de trade** Suite a la dernière mise à jour les fonctionnalité de TP/SL, fermeture de toutes les positions etc on était temporairement mis en pause, il est necessaire de retaper le JS pour avoir une belle cohérence des données
 
 ### ✅ Changements récents :
-- **Passage complet de la base de données à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
+- **Passage complet de JSON à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
 - **Refonte complète des API** avec ajout d’endpoints pour la **modification, l’ajout et la suppression** des données via l’interface, l'interface client n'a pas changé et les données récupérer par le JS sont exactement les mêmes que pour le JSON.
 - **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, en fonction de vos ressources.
 - **Mise à jour du fichier cmd** : Ajout d'une configuration de fichier "host" pour ajouté local.host à 127.0.0.1(necessaire pour MT4).
