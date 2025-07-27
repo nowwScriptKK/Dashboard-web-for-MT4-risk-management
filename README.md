@@ -1,8 +1,11 @@
+### ✅ Changement à venir :
+- **Correction script MQ4** Correction de la mise à jour du TP dans le script MQ4.
+- **Refonte complète JavaScript** Correction de la mise à jour du des calcul RR etc côté javascript + refonte complète du script .js pour avoir une cohérence dans l'architecture.
 
 ### ✅ Changements récents :
 - **Passage complet de la base de données à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
 - **Refonte complète des API** avec ajout d’endpoints pour la **modification, l’ajout et la suppression** des données via l’interface.
-- **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, et probablement encore optimisable.
+- **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, et probablement encore optimisable en fonction de vos ressources.
 - **Mise à jour du fichier cmd ** : Ajout d'une configuration de fichier host pour ajouté local.host à 127.0.0.1(necessaire pour MT4).
 
 ### 🧪 Fonctionnalités expérimentales :
