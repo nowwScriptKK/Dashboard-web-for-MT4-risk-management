@@ -136,7 +136,7 @@ Le projet est organisé de manière modulaire :
 MT4Dashboard/
 │
 ├── CLIENT/         # Interface web (HTML/CSS/JS)
-├── DATA/           # Fichiers JSON (données de trades, config, etc.)
+├── DATA/           # Fichiers sql
 ├── MQ4/            # Expert Advisor pour MetaTrader 4 (.mq4)
 ├── SERVER/         # Backend Flask en Python
 └── config.cmd      # Script de configuration automatique
