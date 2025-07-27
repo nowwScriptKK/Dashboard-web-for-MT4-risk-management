@@ -1,15 +1,17 @@
 ### ✅ Changement à venir :
 - **Correction script MQ4** Correction de la mise à jour du TP dans le script MQ4.
-- **Refonte complète JavaScript** Correction de la mise à jour du des calcul RR etc côté javascript + refonte complète du script .js pour avoir une cohérence dans l'architecture.
+- **Refonte complète JavaScript** Correction de la mise à jour du des calcul RR etc côté javascript + refonte complète du script .js refactorisation pour avoir une cohérence complète avec l'architecture modulaire du projet.
+- **Ré-implémentation de l'automatisation de prise de trade** Suite a la dernière mise à jour les fonctionnalité de TP/SL, fermeture de toutes les positions etc on était temporairement mis en pause, il est necessaire de retaper le JS pour avoir une belle cohérence des données
 
 ### ✅ Changements récents :
 - **Passage complet de la base de données à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
-- **Refonte complète des API** avec ajout d’endpoints pour la **modification, l’ajout et la suppression** des données via l’interface.
-- **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, et probablement encore optimisable en fonction de vos ressources.
-- **Mise à jour du fichier cmd ** : Ajout d'une configuration de fichier host pour ajouté local.host à 127.0.0.1(necessaire pour MT4).
+- **Refonte complète des API** avec ajout d’endpoints pour la **modification, l’ajout et la suppression** des données via l’interface, l'interface client n'a pas changé et les données récupérer par le JS sont exactement les mêmes que pour le JSON.
+- **Gain de performance significatif** : anciennement ~4 secondes par mise à jour, maintenant testé à **0.5s**, en fonction de vos ressources.
+- **Mise à jour du fichier cmd** : Ajout d'une configuration de fichier "host" pour ajouté local.host à 127.0.0.1(necessaire pour MT4).
 
 ### 🧪 Fonctionnalités expérimentales :
-- **Incrémentation d’un LLM en cours de test** (non inclus dans cette version – manque de tests concluants).
+- **Incrémentation d’un LLM en cours de test** (non inclus dans cette version – manque de tests concluants, en local avec une petite machine le LLM a du mal a faire des retours rapdie).
+- **Creation de scrapeur API FED** (non inclus dans cette version).
 
 ### 🐞 Bugs connus :
 - Sur le script MT4, **le TP ne se met pas encore à jour automatiquement**. La correction arrive très prochainement.
@@ -17,13 +19,8 @@
 ### ⚠️ Précautions à prendre :
 - Le fichier `.cmd` ajoute une redirection locale : `127.0.0.1` → `local.host`.
 - **MT4 ne prend pas en charge** les adresses `localhost`, `127.0.0.1`, `0.0.0.0`, etc.
-# L’utilisateur doit autoriser manuellement les requêtes vers l’endpoint `http://local.host/` dans MT4.
+- **L’utilisateur doit autoriser manuellement les requêtes vers l’endpoint `http://local.host/` dans MT4.**
 
-### 🔜 Prochaine mise à jour prévue :
-- Correction du **TP non mis à jour dynamiquement** dans MT4.
-- **Refactorisation complète du JavaScript client** :
-  - Optimisation des calculs (notamment retrait du spread et des commissions dans le RR).
-  - Découpage des fonctions JS dans plusieurs fichiers pour **respecter l’architecture modulaire** du projet.
 
 # 💹 MT4 Web Dashboard
 
@@ -51,7 +48,7 @@ Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une co
 - **MQL4** : Expert Advisor pour MetaTrader 4 (extraction des données)
 - **Python Flask** : Serveur backend API
 - **HTML/CSS/JS** : Interface utilisateur
-- **JSON** : Stockage et échange des données
+- **SQLite** : Stockage et échange des données
 
 ---
 
@@ -75,7 +72,7 @@ Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une co
 
 ## 💻 Fonctionnalités
 
-### 📊 Analyse et Affichage
+### 📊 Analyse et Affichage - C'est cette parti qui sera modifier pour la prochaine mise à jour
 - Vue en **€ ou %**
 - **Mode sombre**
 - **Tableau récapitulatif des performances**
