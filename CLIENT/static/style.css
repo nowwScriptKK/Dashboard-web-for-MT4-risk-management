@@ -388,21 +388,29 @@ body.dark-mode .listClose-trades-container h2 {
 .trade-item {
   display: grid;
   grid-template-columns: repeat(13, minmax(80px, 1fr)) 120px;
-  align-items: center;
+  align-items: center;  /* centre vertical contenu de la cellule */
+  justify-content: center; /* centre horizontal */
   gap: 0.5rem;
   padding: 0.4rem 0;
   border-bottom: 1px solid #d1d9e6;
   font-size: 0.8rem;
+  
+
 }
 
 .trade-item:last-child {
   border-bottom: none;
+  align-items: center;  /* centre vertical contenu de la cellule */
+  justify-content: center; /* centre horizontal */
+}
+.trade-item > div:last-child {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  padding: 0 4px;
 }
 
 .trade-item > div {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   text-align: center;
   padding: 0 2px;
 }
@@ -417,6 +425,7 @@ body.dark-mode .listClose-trades-container h2 {
 
 .trade-header > div {
   font-size: 0.85rem;
+  line-height: 1.2rem; 
 }
 
 /* Boutons actions (Modifier / Supprimer) */

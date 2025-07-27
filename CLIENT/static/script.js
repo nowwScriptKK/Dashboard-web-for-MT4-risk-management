@@ -57,7 +57,7 @@ function updateDisplay(data) {
 // === Récupération des données ===
 async function fetchData() {
   try {
-    const res = await fetch('http://localhost:8080/api/trades');
+    const res = await fetch('http://localhost:80/api/tradesDB');
     if (!res.ok) throw new Error('Erreur réseau');
     const data = await res.json();
 
@@ -76,19 +76,42 @@ async function fetchData() {
 
 async function fetchComments() {
   try {
-    const res = await fetch('http://localhost:8080/api/comments');
+    const res = await fetch('http://localhost:80/api/commentsDB');
     if (!res.ok) throw new Error('Erreur réseau (comments)');
     const data = await res.json();
-    commentsCache = data.data.comments || {};
+    
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Erreur inconnue');
+    }
+    
+    // Formatage des données pour correspondre à votre structure
+    commentsCache = {};
+    Object.entries(data.data).forEach(([ticket, comment]) => {
+      commentsCache[ticket] = {
+        text: comment.text || '',
+        satisfaction: comment.satisfaction || 0,
+        confiance: comment.confiance || 0,
+        attente: comment.attente || '',
+        date: comment.date || '',
+        status: comment.status || 'unread',
+        printer: comment.printer || '',
+        created_at: comment.created_at || '',
+        updated_at: comment.updated_at || ''
+      };
+    });
+    
+    renderTrades();
+    renderClosedTradesPage();
+    return true;
   } catch (e) {
     console.error("Erreur fetch comments:", e);
     commentsCache = {};
+    return false;
   }
 }
-
 async function fetchStats() {
   try {
-    const capRes = await fetch('http://localhost:8080/api/capital');
+    const capRes = await fetch('http://localhost:80/api/capitalDB');
     if (!capRes.ok) throw new Error('Erreur réseau (capital)');
     const capData = await capRes.json();
     const capital = capData.capital || 1;
@@ -96,7 +119,7 @@ async function fetchStats() {
     document.getElementById('stat-capital').textContent = inPercent ? "100%" : capital.toFixed(2) + " €";
 
     let tradesData;
-    const tradesRes = await fetch('http://localhost:8080/api/trades');
+    const tradesRes = await fetch('http://localhost:80/api/tradesDB');
     if (!tradesRes.ok) throw new Error('Erreur réseau (trades pour stats)');
     tradesData = await tradesRes.json();
     rawData = tradesData;
@@ -168,7 +191,7 @@ function renderTrades() {
 
   for (const trade of tradesCache) {
     const rr = calcRR(trade);
-    const comment = commentsCache[trade.ticket] || {};
+    const comment = commentsCache[String(trade.ticket)] || {};
     const typeStr = trade.type === 1 ? "Achat" : "Vente";
     const div = document.createElement('div');
     div.className = 'trade-item';
@@ -178,10 +201,13 @@ function renderTrades() {
       <div>${trade.lots}</div><div>${trade.open_price}</div><div>${trade.sl}</div><div>${trade.tp}</div>
       <div>${trade.profit != null ? fmt(trade.profit, capitalReference || 1) : '-'}</div><div>${rr ?? '-'}</div>
       <div>${comment.attente ?? '-'}</div><div>${comment.confiance ?? '-'}</div><div>${comment.satisfaction ?? '-'}</div>
-      <div>${escapeHtml(comment.text)}</div>
+      
+      <div>${escapeHtml(comment.text || '')}</div>
       <div>
         <button class="edit-comment-btn" data-ticket="${trade.ticket}">✏️</button>
         <button class="delete-comment-btn" data-ticket="${trade.ticket}">🗑️</button>
+         <button class="add-st-btn" data-ticket="${trade.ticket}">✨</button>
+        <button class="delete-trade-btn" data-ticket="${trade.ticket}">❌</button>
       </div>`;
     container.appendChild(div);
   }
@@ -204,53 +230,7 @@ document.getElementById("toggleFloat").onclick = () => {
   box.classList.toggle("hidden");
 };
 
-// === Chargement / Edition Config ===
-async function loadConfig() {
-  try {
-    const res = await fetch("http://localhost:8080/api/config");
-    if (!res.ok) throw new Error("Erreur réseau (config)");
-    const data = await res.json();
-    configCache = data.data.config;
 
-    document.getElementById("closeBloc_allTrade").checked = !!configCache.closeBloc_allTrade;
-    document.getElementById("autoStopLoss_enabled").checked = !!configCache.auto_stop_loss.enabled;
-    document.getElementById("autoStopLoss_distance").value = configCache.auto_stop_loss.distance_pips ?? 0;
-    document.getElementById("trailingStop_enabled").checked = !!configCache.trailing_stop.enabled;
-    document.getElementById("trailingStop_distance").value = configCache.trailing_stop.distance_pips ?? 0;
-
-    showConfigMessage("");
-  } catch (err) {
-    showConfigMessage("Erreur lors du chargement de la configuration", true);
-    console.error(err);
-  }
-}
-
-function sendConfigUpdate(payload) {
-  showConfigMessage("Enregistrement...");
-  fetch("http://localhost:8080/api/config/edit", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.status === "success") {
-        showConfigMessage("Modification enregistrée", false);
-        if (payload.section) {
-          configCache[payload.section] = { ...configCache[payload.section], ...payload };
-          delete configCache[payload.section].section;
-        } else {
-          Object.assign(configCache, payload);
-        }
-      } else {
-        showConfigMessage("Erreur: " + (data.message || "Erreur inconnue"), true);
-      }
-    })
-    .catch((err) => {
-      showConfigMessage("Erreur réseau", true);
-      console.error(err);
-    });
-}
 
 // Listeners sur inputs config
 document.getElementById("closeBloc_allTrade").addEventListener("change", (e) => {
@@ -276,7 +256,7 @@ document.getElementById("trailingStop_distance").addEventListener("change", (e) 
 });
 
 // === Gestion commentaires ===
-function createModal() {
+function createModal(attente = '') {
   if (document.getElementById('commentModal')) return;
 
   const modal = document.createElement('div');
@@ -299,7 +279,7 @@ function createModal() {
     <h3>Editer Commentaire</h3>
     <form id="commentForm">
       <input type="hidden" id="commentId" />
-      <label>Attente:<br><input type="text" id="commentAttente" style="width: 100%;" /></label><br><br>
+      <label>Attente:<br><input type="text" id="commentAttente" style="width: 100%;" value="" /></label><br><br>
       <label>Confiance (0-5):<br><input type="number" id="commentConfiance" min="0" max="5" style="width: 100%;" /></label><br><br>
       <label>Satisfaction (0-5):<br><input type="number" id="commentSatisfaction" min="0" max="5" style="width: 100%;" /></label><br><br>
       <label>Texte:<br><textarea id="commentText" rows="5" style="width: 100%;"></textarea></label><br><br>
@@ -309,6 +289,9 @@ function createModal() {
   `;
 
   document.body.appendChild(modal);
+
+  // Ajouter la valeur d'attente après la création du modal
+  document.getElementById('commentAttente').value = attente;
 
   document.getElementById('closeModalBtn').onclick = () => closeEditPopup();
 
@@ -348,40 +331,61 @@ async function saveComment() {
   const satisfaction = parseInt(document.getElementById('commentSatisfaction').value);
   const text = document.getElementById('commentText').value.trim();
 
-  const payload = { id };
-  if (attente) payload.attente = attente;
-  if (!isNaN(confiance)) payload.confiance = confiance;
-  if (!isNaN(satisfaction)) payload.satisfaction = satisfaction;
-  if (text) payload.text = text;
+  // Validation comme dans le backend
+  if (!attente && !text) {
+    alert("Texte ou attente requis!");
+    return;
+  }
 
-  const isNew = !commentsCache[id];
-  const url = isNew ? 'http://localhost:8080/api/comments/add' : 'http://localhost:8080/api/comments/edit';
+  if (confiance < 0 || confiance > 5 || satisfaction < 0 || satisfaction > 5) {
+    alert("Confiance et satisfaction doivent être entre 0 et 5");
+    return;
+  }
+
+  const payload = {
+    id: id,
+    text: text,
+    satisfaction: satisfaction,
+    confiance: confiance,
+    attente: attente
+  };
 
   try {
-    const res = await fetch(url, {
-  method: 'POST',
-  body: new URLSearchParams(payload)
-});
-
-    if (!res.ok) throw new Error('Erreur lors de la sauvegarde');
+    // Détermine si c'est une nouvelle entrée ou une modification
+    const isNew = !commentsCache[id];
+    const endpoint = isNew ? 'addDB' : 'editDB';
+    
+    const res = await fetch(`http://localhost:80/api/comments/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
     const data = await res.json();
-    if (data.status !== 'success') throw new Error(data.message || 'Erreur inconnue');
+    
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Erreur inconnue');
+    }
 
+    // Mise à jour du cache local
     commentsCache[id] = {
-      attente: payload.attente || '',
-      confiance: payload.confiance ?? 0,
-      satisfaction: payload.satisfaction ?? 0,
-      text: payload.text || ''
+      text: text,
+      satisfaction: satisfaction,
+      confiance: confiance,
+      attente: attente,
+      // On conserve les autres champs s'ils existent déjà
+      ...(commentsCache[id] || {})
     };
 
+    // Mise à jour de l'UI
     updateCommentInUI(id);
     closeEditPopup();
-    await fetchComments();
     renderTrades();
+    renderClosedTradesPage();
+    
   } catch (err) {
-    isEditing = false;
-    console.error(err);
+    console.error("Erreur sauvegarde commentaire:", err);
+    alert(`Erreur: ${err.message}`);
   }
 }
 
@@ -391,16 +395,67 @@ function updateCommentInUI(ticket) {
   const comment = commentsCache[ticket];
 
   const cols = tradeDiv.children;
+  // Ajustement des index:
   cols[9].textContent = comment.attente ?? '-';
   cols[10].textContent = comment.confiance ?? '-';
   cols[11].textContent = comment.satisfaction ?? '-';
-  cols[12].textContent = escapeHtml(comment.text);
+  cols[12].textContent = escapeHtml(comment.text || '');
 }
 
 async function deleteComment(ticket) {
-  if (!confirm("Supprimer le commentaire pour le trade " + ticket + " ?")) return;
+  if (!confirm(`Supprimer le commentaire pour le trade ${ticket} ?`)) return;
+  
   try {
-    const res = await fetch('http://localhost:8080/api/comments/delete', {
+    const res = await fetch('http://localhost:80/api/comments/deleteDB', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: ticket })
+    });
+
+    const data = await res.json();
+    
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Erreur inconnue');
+    }
+
+    delete commentsCache[ticket];
+    await fetchComments(); // Recharge les données fraîches
+    renderClosedTradesPage();
+    renderTrades();
+    
+  } catch (err) {
+    console.error("Erreur suppression commentaire:", err);
+    alert(`Erreur: ${err.message}`);
+  }
+}
+async function tradeComment(ticket) {
+  if (!confirm("Ajouter un TP et un SL au trade : " + ticket + " ?")) return;
+  try {
+    const res = await fetch('http://localhost:80/api/commentsDB', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: ticket})
+    });
+    if (!res.ok) throw new Error('Erreur réseau');
+    const data = await res.json();
+    if (data.status !== 'success') throw new Error(data.message || 'Erreur inconnue');
+
+    delete commentsCache[ticket];
+    
+    // Recharge les commentaires du serveur (optionnel, mais recommandé pour synchro)
+    await fetchComments();
+
+    // Re-render la liste pour afficher la suppression
+    renderClosedTradesPage();
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+async function closeTrade(ticket) {
+  if (!confirm("Supprimer le trade " + ticket + " ?")) return;
+  try {
+    const res = await fetch('http://localhost:80/api/trades/closesDB', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: ticket })
@@ -422,7 +477,6 @@ async function deleteComment(ticket) {
   }
 }
 
-
 // === Gestion des clics boutons ===
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("button");
@@ -433,13 +487,17 @@ document.addEventListener("click", (e) => {
     openEditPopup(ticket);
   } else if (btn.classList.contains("delete-comment-btn")) {
     deleteComment(ticket);
+  }else if (btn.classList.contains("delete-trade-btn")) {
+    closeTrade(ticket);
+  }else if (btn.classList.contains("add-st-btn")) {
+    tradeComment(ticket);
   }
 });
 
 // === Graphique capital ===
 async function loadSymbolsColors() {
   try {
-    const response = await fetch('http://127.0.0.1:8080/static/allSymbolsToColor.json');
+    const response = await fetch('http://127.0.0.1:80/static/allSymbolsToColor.json');
     symbolsColors = await response.json();
   } catch (error) {
     console.error("Erreur chargement couleurs:", error);
@@ -459,7 +517,7 @@ async function loadSymbolsColors() {
 
 async function getInitialCapital() {
   try {
-    const response = await fetch('http://127.0.0.1:8080/api/trades');
+    const response = await fetch('http://127.0.0.1:80/api/tradesDB');
     const data = await response.json();
     initialCapital = data.data.account.balance || 1000;
   } catch (error) {
@@ -547,7 +605,7 @@ async function updateCapitalChart() {
   if (!capitalChart) return;
   
   try {
-    const response = await fetch('http://127.0.0.1:8080/api/trades');
+    const response = await fetch('http://127.0.0.1:80/api/tradesDB');
     const data = await response.json();
     const closedTrades = data.data.closed_trades || [];
     
@@ -683,7 +741,7 @@ function renderClosedTradesPage() {
       <div>${trade.lots}</div><div>${trade.open_price}</div><div>${trade.sl}</div><div>${trade.tp}</div>
       <div>${trade.profit != null ? fmt(trade.profit, capitalReference || initialCapital || 1) : '-'}</div><div>${rr ?? '-'}</div>
       <div>${comment.attente ?? '-'}</div><div>${comment.confiance ?? '-'}</div><div>${comment.satisfaction ?? '-'}</div>
-      <div>${escapeHtml(comment.text)}</div>
+      <div>${escapeHtml(comment.text || '')}</div>
       <div>
         <button class="edit-comment-btn" data-ticket="${trade.ticket}">✏️</button>
         <button class="delete-comment-btn" data-ticket="${trade.ticket}">🗑️</button>
@@ -696,7 +754,7 @@ function renderClosedTradesPage() {
 
 async function loadClosedTrades() {
   try {
-    const res = await fetch('http://localhost:8080/api/trades');
+    const res = await fetch('http://localhost:80/api/tradesDB');
     if (!res.ok) throw new Error("Erreur fetch closed trades");
     const data = await res.json();
 
@@ -712,15 +770,14 @@ async function loadClosedTrades() {
 // === Initialisation complète ===
 async function initApp() {
   await getInitialCapital();
-  await fetchComments();
-  await fetchData();
-  await fetchStats();
+  await fetchComments(); // Chargement initial des commentaires
   await loadClosedTrades();
   await initCapitalChart();
 
   // Rafraîchissements automatiques
   setInterval(() => { if (!isEditing) fetchData(); }, 2000);
   setInterval(() => { if (!isEditing) fetchStats(); }, 2000);
+  setInterval(() => { if (!isEditing) fetchComments(); }, 2000);
   setInterval(() => { if (!isEditing) updateCapitalChart(); }, 60000);
 }
 

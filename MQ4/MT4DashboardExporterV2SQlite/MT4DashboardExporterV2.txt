@@ -1,0 +1,674 @@
+#property strict
+#property show_inputs
+
+// Configuration du serveur
+input string ServerAddress = "http://local.host"; 
+input int    TimeoutMS = 10000;
+input int    ConfigRefreshInterval = 60;
+datetime lastPendingCloseCheck; // Variable globale
+input int PendingCloseCheckInterval = 5; // Secondes entre les vérifications
+
+// Variables globales
+int openTradesArray[];
+int closedTradesArray[];
+datetime lastConfigRefresh;
+double lastEquity;
+double lastBalance;
+MqlDateTime lastServerTime;
+int disappearedTickets[];
+int retryCounts[];
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit() {
+   lastConfigRefresh = TimeCurrent() - ConfigRefreshInterval;
+   lastEquity = AccountEquity();
+   lastBalance = AccountBalance();
+   lastPendingCloseCheck = TimeCurrent();
+   ControlledCheckCloseCommands(); // Déclenché sur action de trading
+   TimeToStruct(TimeCurrent(), lastServerTime);
+   
+   if(!TerminalInfoInteger(TERMINAL_CONNECTED)) {
+      Alert("Pas de connexion Internet !");
+      return(INIT_FAILED);
+   }
+
+   SendInitialData();
+   Print("EA Dashboard HTTP Exporter lancé");
+   return(INIT_SUCCEEDED);
+}
+void ControlledCheckCloseCommands() {
+    if(TimeCurrent() - lastPendingCloseCheck >= PendingCloseCheckInterval) {
+        CheckServerCloseCommands();
+        lastPendingCloseCheck = TimeCurrent();
+    }
+}
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason) {
+   Print("EA arrêté - Raison: ", reason);
+}
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick() {
+   CheckAccountChanges();
+   CheckForNewOrModifiedTrades();
+   CheckForClosedTrades();
+   CheckDisappearedTickets();
+   ProcessConfigFromServer();
+   CheckServerCloseCommands();
+}
+
+//+------------------------------------------------------------------+
+//| Envoi des données initiales                                      |
+//+------------------------------------------------------------------+
+void SendInitialData() {
+   SendAccountInfo();
+   GetConfigFromServer();
+   SendClosedTradesHistory();
+   SendAllOpenTrades();
+}
+
+//+------------------------------------------------------------------+
+//| Envoie les informations du compte                                |
+//+------------------------------------------------------------------+
+void SendAccountInfo() {
+   string json = StringFormat(
+      "{\"account\":{"
+      "\"number\":%d,"
+      "\"name\":\"%s\","
+      "\"currency\":\"%s\","
+      "\"leverage\":%d,"
+      "\"balance\":%.2f,"
+      "\"equity\":%.2f,"
+      "\"free_margin\":%.2f,"
+      "\"margin\":%.2f"
+      "}}",
+      AccountNumber(),
+      AccountName(),
+      AccountCurrency(),
+      AccountLeverage(),
+      AccountBalance(),
+      AccountEquity(),
+      AccountFreeMargin(),
+      AccountMargin()
+   );
+   
+   string url = ServerAddress + "/api/account/editDB";
+   string headers = "Content-Type: application/json";
+   char post[], result[];
+   string result_headers;
+   
+   ArrayResize(post, StringLen(json));
+   StringToCharArray(json, post, 0, StringLen(json));
+   
+   int res = WebRequest("POST", url, headers, TimeoutMS, post, result, result_headers);
+   
+   if(res == 200) {
+      Print("Compte mis à jour");
+   } else {
+      Print("Erreur compte: ", res, " ", GetLastError());
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Récupère la configuration depuis le serveur                      |
+//+------------------------------------------------------------------+
+void GetConfigFromServer() {
+   string url = ServerAddress + "/api/configDB";
+   string headers = "Content-Type: application/json";
+   char data[], result[];
+   string result_headers;
+   
+   int res = WebRequest("GET", url, headers, TimeoutMS, data, result, result_headers);
+   
+   if(res == 200) {
+      string response = CharArrayToString(result, 0, WHOLE_ARRAY);
+      ProcessConfigData(response);
+   } else {
+      Print("Erreur config: ", GetLastError());
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Traite les données de configuration                              |
+//+------------------------------------------------------------------+
+void ProcessConfigData(string jsonData) {
+   bool autoSL_enabled = ExtractBool(jsonData, "auto_stop_loss", "enabled");
+   int autoSL_distance = ExtractInt(jsonData, "auto_stop_loss", "distance_pips");
+   bool trailing_enabled = ExtractBool(jsonData, "trailing_stop", "enabled");
+   int trailing_distance = ExtractInt(jsonData, "trailing_stop", "distance_pips");
+   bool close_all = ExtractBool(jsonData, "", "closeBloc_allTrade");
+   
+   ManageTrades(autoSL_enabled, autoSL_distance, trailing_enabled, trailing_distance, close_all);
+}
+
+//+------------------------------------------------------------------+
+//| Envoie tous les trades ouverts                                   |
+//+------------------------------------------------------------------+
+void SendAllOpenTrades() {
+   for(int i = 0; i < OrdersTotal(); i++) {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+         SendTradeData(OrderTicket(), false);
+         AddToArray(openTradesArray, OrderTicket());
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Envoie l'historique des trades fermés                            |
+//+------------------------------------------------------------------+
+void SendClosedTradesHistory() {
+   int total = OrdersHistoryTotal();
+   for(int i = 0; i < total; i++) {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_HISTORY)) {
+         SendTradeData(OrderTicket(), true);
+         AddToArray(closedTradesArray, OrderTicket());
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Vérifie les changements de compte                                |
+//+------------------------------------------------------------------+
+void CheckAccountChanges() {
+   MqlDateTime currentTime;
+   TimeToStruct(TimeCurrent(), currentTime);
+   
+   if(currentTime.hour != lastServerTime.hour || currentTime.day != lastServerTime.day) {
+      SendAccountInfo();
+      lastServerTime = currentTime;
+   }
+   
+   if(MathAbs(AccountEquity() - lastEquity) > (AccountBalance() * 0.01) || 
+      MathAbs(AccountBalance() - lastBalance) > 0.01) {
+      SendAccountInfo();
+      lastEquity = AccountEquity();
+      lastBalance = AccountBalance();
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Vérifie les nouveaux trades/modifications                        |
+//+------------------------------------------------------------------+
+void CheckForNewOrModifiedTrades() {
+   for(int i = 0; i < OrdersTotal(); i++) {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+         int ticket = OrderTicket();
+         
+         if(FindInArray(openTradesArray, ticket) == -1) {
+            SendTradeData(ticket, false);
+            AddToArray(openTradesArray, ticket);
+         } else {
+            CheckForTradeModifications(ticket);
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Vérifie les modifications sur un trade                           |
+//+------------------------------------------------------------------+
+void CheckForTradeModifications(int ticket) {
+   static double lastSL = 0;
+   static double lastTP = 0;
+   static string lastComment = "";
+   
+   if(OrderSelect(ticket, SELECT_BY_TICKET)) {
+      if(lastSL != OrderStopLoss()) {
+         SendTradeUpdate(ticket, "sl", DoubleToString(OrderStopLoss(), 5));
+         lastSL = OrderStopLoss();
+      }
+      
+      if(lastTP != OrderTakeProfit()) {
+         SendTradeUpdate(ticket, "tp", DoubleToString(OrderTakeProfit(), 5));
+         lastTP = OrderTakeProfit();
+      }
+      
+      if(lastComment != OrderComment()) {
+         SendTradeUpdate(ticket, "comment", OrderComment());
+         lastComment = OrderComment();
+      }
+      ControlledCheckCloseCommands();
+   }
+   
+}
+
+//+------------------------------------------------------------------+
+//| Vérifie les trades fermés                                        |
+//+------------------------------------------------------------------+
+void CheckForClosedTrades() {
+    // 1. Vérifier les trades ouverts manquants
+    for(int i = ArraySize(openTradesArray) - 1; i >= 0; i--) {
+        int ticket = openTradesArray[i];
+        bool found = false;
+        
+        // Vérifier si le ticket est toujours ouvert
+        for(int j = 0; j < OrdersTotal(); j++) {
+            if(OrderSelect(j, SELECT_BY_POS, MODE_TRADES) && OrderTicket() == ticket) {
+                found = true;
+                break;
+            }
+        }
+        
+        if(!found) {
+            // Vérifier dans l'historique
+            bool historyFound = false;
+            for(int k = OrdersHistoryTotal() - 1; k >= 0; k--) {
+                if(OrderSelect(k, SELECT_BY_POS, MODE_HISTORY) && OrderTicket() == ticket) {
+                    SendClosedTradeUpdate(ticket);
+                    AddToArray(closedTradesArray, ticket);
+                    RemoveFromArray(openTradesArray, i);
+                    historyFound = true;
+                    Print("Trade fermé détecté: #", ticket);
+                    break;
+                }
+            }
+            
+            if(!historyFound) {
+                // Ajouter aux tickets disparus pour vérification ultérieure
+                RemoveFromArray(openTradesArray, i);
+                AddToDisappeared(ticket, 10);
+                Print("Ticket disparu ajouté: #", ticket);
+            }
+        }
+    }
+    
+    // 2. Vérifier les nouveaux trades dans l'historique
+    for(int i = OrdersHistoryTotal() - 1; i >= 0; i--) {
+        if(OrderSelect(i, SELECT_BY_POS, MODE_HISTORY)) {
+            int ticket = OrderTicket();
+            
+            if(FindInArray(closedTradesArray, ticket) == -1 && 
+               FindInArray(openTradesArray, ticket) == -1) {
+                SendClosedTradeUpdate(ticket);
+                AddToArray(closedTradesArray, ticket);
+                Print("Nouveau trade fermé dans l'historique: #", ticket);
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| Envoie la mise à jour d'un trade fermé                           |
+//+------------------------------------------------------------------+
+void SendClosedTradeUpdate(int ticket) {
+    if(!OrderSelect(ticket, SELECT_BY_TICKET, MODE_HISTORY)) {
+        Print("Échec de sélection du ticket historique: #", ticket);
+        return;
+    }
+    
+    string json = StringFormat(
+        "{\"id\":%d,"
+        "\"updates\":{"
+        "\"close_price\":%.5f,"
+        "\"close_time\":\"%s\","
+        "\"profit\":%.2f,"
+        "\"swap\":%.2f,"
+        "\"commission\":%.2f,"
+        "\"status\":\"closed\"}}",
+        ticket,
+        OrderClosePrice(),
+        TimeToStr(OrderCloseTime(), TIME_DATE|TIME_SECONDS),
+        OrderProfit(),
+        OrderSwap(),
+        OrderCommission()
+    );
+    
+    string url = ServerAddress + "/api/trades/editDB";
+    string headers = "Content-Type: application/json";
+    char post[], result[];
+    string result_headers;
+    
+    ArrayResize(post, StringLen(json));
+    StringToCharArray(json, post, 0, StringLen(json));
+    
+    int res = WebRequest("POST", url, headers, TimeoutMS, post, result, result_headers);
+    
+    if(res == 200) {
+        Print("Trade fermé ", ticket, " mis à jour");
+    } else {
+        Print("Erreur MAJ trade fermé ", ticket, ": ", res, " ", GetLastError());
+        // Réessayer en cas d'échec
+        AddToDisappeared(ticket, 5);
+    }
+}
+
+//+------------------------------------------------------------------+
+//| Envoie les données d'un trade                                    |
+//+------------------------------------------------------------------+
+void SendTradeData(int ticket, bool isClosed) {
+   if(!OrderSelect(ticket, isClosed ? SELECT_BY_TICKET|MODE_HISTORY : SELECT_BY_TICKET)) return;
+   
+   string json = "{";
+   json += StringFormat("\"ticket\":%d,", ticket);
+   json += StringFormat("\"symbol\":\"%s\",", OrderSymbol());
+   json += StringFormat("\"type\":%d,", OrderType());
+   json += StringFormat("\"lots\":%.2f,", OrderLots());
+   json += StringFormat("\"open_price\":%.5f,", OrderOpenPrice());
+   json += StringFormat("\"open_time\":\"%s\",", TimeToStr(OrderOpenTime(), TIME_DATE|TIME_SECONDS));
+   
+   if(isClosed) {
+      json += StringFormat("\"close_price\":%.5f,", OrderClosePrice());
+      json += StringFormat("\"close_time\":\"%s\",", TimeToStr(OrderCloseTime(), TIME_DATE|TIME_SECONDS));
+   }
+   
+   json += StringFormat("\"sl\":%s,", (OrderStopLoss() > 0 ? DoubleToString(OrderStopLoss(), 5) : "null"));
+   json += StringFormat("\"tp\":%s,", (OrderTakeProfit() > 0 ? DoubleToString(OrderTakeProfit(), 5) : "null"));
+   json += StringFormat("\"profit\":%.2f,", OrderProfit());
+   json += StringFormat("\"swap\":%.2f,", OrderSwap());
+   json += StringFormat("\"commission\":%.2f,", OrderCommission());
+   json += StringFormat("\"comment\":\"%s\"", OrderComment());
+   json += "}";
+   
+   string url = ServerAddress + "/api/trades/add";
+   string headers = "Content-Type: application/json";
+   char post[], result[];
+   string result_headers;
+   
+   ArrayResize(post, StringLen(json));
+   StringToCharArray(json, post, 0, StringLen(json));
+   
+   int res = WebRequest("POST", url, headers, TimeoutMS, post, result, result_headers);
+   
+   if(res == 200) {
+      Print("Trade ", ticket, " envoyé");
+   } else {
+      Print("Erreur trade ", ticket, ": ", res, " ", GetLastError());
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Envoie une mise à jour de trade                                  |
+//+------------------------------------------------------------------+
+void SendTradeUpdate(int ticket, string field, string value) {
+   string json = StringFormat("{\"id\":%d,\"field\":\"%s\",\"value\":\"%s\"}", ticket, field, value);
+   
+   string url = ServerAddress + "/api/trades/editDB";
+   string headers = "Content-Type: application/json";
+   char post[], result[];
+   string result_headers;
+   
+   ArrayResize(post, StringLen(json));
+   StringToCharArray(json, post, 0, StringLen(json));
+   
+   int res = WebRequest("POST", url, headers, TimeoutMS, post, result, result_headers);
+   
+   if(res == 200) {
+      Print("Mise à jour ", ticket, " (", field, "=", value, ")");
+   } else {
+      Print("Erreur MAJ ", ticket, ": ", res, " ", GetLastError());
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Traite la configuration du serveur                               |
+//+------------------------------------------------------------------+
+void ProcessConfigFromServer() {
+   if(TimeCurrent() - lastConfigRefresh >= ConfigRefreshInterval) {
+      GetConfigFromServer();
+      lastConfigRefresh = TimeCurrent();
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Vérifie les ordres de fermeture                                  |
+//+------------------------------------------------------------------+
+void CheckServerCloseCommands() {
+   string url = ServerAddress + "/api/trades/pending_closes";
+   string headers = "Content-Type: application/json";
+   char data[], result[];
+   string result_headers;
+   
+   string json = "{\"open_tickets\":[";
+   for(int i = 0; i < OrdersTotal(); i++) {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+         if(i > 0) json += ",";
+         json += StringFormat("%d", OrderTicket());
+      }
+   }
+   json += "]}";
+   
+   ArrayResize(data, StringLen(json));
+   StringToCharArray(json, data, 0, StringLen(json));
+   
+   int res = WebRequest("POST", url, headers, TimeoutMS, data, result, result_headers);
+   
+   if(res == 200) {
+      string response = CharArrayToString(result, 0, WHOLE_ARRAY);
+      int tickets[];
+      if(ParseCloseTickets(response, tickets)) {
+         for(int i = 0; i < ArraySize(tickets); i++) {
+            CloseTradeByTicket(tickets[i]);
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Ferme un trade spécifique                                        |
+//+------------------------------------------------------------------+
+void CloseTradeByTicket(int ticket) {
+   if(OrderSelect(ticket, SELECT_BY_TICKET, MODE_TRADES)) {
+      double price = (OrderType() == OP_BUY) ? Bid : Ask;
+      if(OrderClose(ticket, OrderLots(), price, 3)) {
+         Print("Fermeture #", ticket);
+         // Retirer immédiatement du tableau ouvert
+         int index = FindInArray(openTradesArray, ticket);
+         if(index != -1) RemoveFromArray(openTradesArray, index);
+         
+         // Ajouter aux tickets disparus pour suivi
+         AddToDisappeared(ticket, 5);
+         Print("Ticket fermé ajouté aux disparus: #", ticket);
+      }
+      else {
+         Print("Échec de la fermeture du trade #", ticket, ". Erreur: ", GetLastError());
+      }
+   }
+   else {
+      Print("Ticket non trouvé (déjà fermé?): #", ticket);
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Gestion des trades selon configuration                           |
+//+------------------------------------------------------------------+
+void ManageTrades(bool autoSL_enabled, int autoSL_distance,
+                 bool trailing_enabled, int trailing_distance,
+                 bool close_all) {
+   if(close_all) {
+      CloseAllTrades();
+      return;
+   }
+
+   for(int i = OrdersTotal() - 1; i >= 0; i--) {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+
+      if(autoSL_enabled && OrderStopLoss() == 0) {
+         double sl = CalculateStopLoss(OrderType(), OrderOpenPrice(), autoSL_distance);
+         if(OrderModify(OrderTicket(), OrderOpenPrice(), sl, OrderTakeProfit(), 0)) {
+            SendTradeUpdate(OrderTicket(), "sl", DoubleToString(sl, 5));
+         }
+      }
+
+      if(trailing_enabled) {
+         double new_sl = CalculateTrailingStop(OrderType(), OrderStopLoss(), trailing_distance);
+         if(ShouldMoveTrailing(OrderType(), OrderStopLoss(), new_sl)) {
+            if(OrderModify(OrderTicket(), OrderOpenPrice(), new_sl, OrderTakeProfit(), 0)) {
+               SendTradeUpdate(OrderTicket(), "sl", DoubleToString(new_sl, 5));
+            }
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Fonctions utilitaires                                            |
+//+------------------------------------------------------------------+
+void AddToArray(int &array[], int value) {
+   int size = ArraySize(array);
+   ArrayResize(array, size + 1);
+   array[size] = value;
+}
+
+int FindInArray(int &array[], int value) {
+   for(int i = 0; i < ArraySize(array); i++) {
+      if(array[i] == value) return i;
+   }
+   return -1;
+}
+
+void RemoveFromArray(int &array[], int index) {
+   int size = ArraySize(array);
+   if(index < 0 || index >= size) return;
+   
+   for(int i = index; i < size - 1; i++) {
+      array[i] = array[i + 1];
+   }
+   ArrayResize(array, size - 1);
+}
+
+bool ParseCloseTickets(string json, int &tickets[]) {
+   int start = StringFind(json, "\"tickets_to_close\":[");
+   if(start < 0) return false;
+   
+   string list = StringSubstr(json, start + 19);
+   int end = StringFind(list, "]");
+   if(end < 0) return false;
+   
+   list = StringSubstr(list, 0, end);
+   string items[];
+   int count = StringSplit(list, ',', items);
+   
+   ArrayResize(tickets, count);
+   for(int i = 0; i < count; i++) {
+      tickets[i] = (int)StringToInteger(items[i]);
+   }
+   
+   return true;
+}
+
+double CalculateStopLoss(int type, double price, int distancePips) {
+   double pip = GetPipValue();
+   double minDist = MarketInfo(Symbol(), MODE_STOPLEVEL) * MarketInfo(Symbol(), MODE_POINT);
+
+   double sl = 0;
+   if(type == OP_BUY) {
+      sl = price - distancePips * pip;
+      if((price - sl) < minDist) sl = price - minDist;
+   } else if(type == OP_SELL) {
+      sl = price + distancePips * pip;
+      if((sl - price) < minDist) sl = price + minDist;
+   }
+
+   return NormalizeDouble(sl, (int)MarketInfo(Symbol(), MODE_DIGITS));
+}
+
+double CalculateTrailingStop(int type, double current_sl, int distance) {
+   return (type == OP_BUY) ? Bid - distance * _Point :
+          (type == OP_SELL) ? Ask + distance * _Point : current_sl;
+}
+
+bool ShouldMoveTrailing(int type, double current_sl, double new_sl) {
+   if(current_sl == 0) return true;
+   return (type == OP_BUY && new_sl > current_sl) ||
+          (type == OP_SELL && new_sl < current_sl);
+}
+
+void CloseAllTrades() {
+   for(int i = OrdersTotal() - 1; i >= 0; i--) {
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+         int ticket = OrderTicket();
+         double price = (OrderType() == OP_BUY) ? Bid : Ask;
+         if(OrderClose(ticket, OrderLots(), price, 3)) {
+            Print("Fermeture #", ticket);
+            // Attendre un peu et envoyer la mise à jour
+            Sleep(1000);
+            if(OrderSelect(ticket, SELECT_BY_TICKET, MODE_HISTORY)) {
+               SendClosedTradeUpdate(ticket);
+            }
+         }
+      }
+   }
+}
+
+bool ExtractBool(string json, string section, string key) {
+   int startPos = 0;
+   string sectionPattern = "\"" + section + "\":";
+   startPos = StringFind(json, sectionPattern);
+   if(startPos == -1) return false;
+   
+   string keyPattern = "\"" + key + "\":";
+   int keyPos = StringFind(json, keyPattern, startPos);
+   if(keyPos == -1) return false;
+
+   int valueStart = StringFind(json, ":", keyPos) + 1;
+   string valueStr = StringSubstr(json, valueStart, 4);
+   return (StringFind(valueStr, "true", 0) != -1);
+}
+
+int ExtractInt(string json, string section, string key) {
+   int startPos = 0;
+   string sectionPattern = "\"" + section + "\":";
+   startPos = StringFind(json, sectionPattern);
+   if(startPos == -1) return 0;
+   
+   string keyPattern = "\"" + key + "\":";
+   int keyPos = StringFind(json, keyPattern, startPos);
+   if(keyPos == -1) return 0;
+
+   int valueStart = StringFind(json, ":", keyPos) + 1;
+   int valueEnd = StringFind(json, ",", valueStart);
+   if(valueEnd == -1) valueEnd = StringFind(json, "}", valueStart);
+   
+   string valueStr = StringSubstr(json, valueStart, valueEnd - valueStart);
+   return (int)StringToInteger(valueStr);
+}
+
+double GetPipValue() {
+   int digits = (int)MarketInfo(Symbol(), MODE_DIGITS);
+   if(digits == 5 || digits == 3) return 10 * _Point;
+   return _Point;
+}
+
+void AddToDisappeared(int ticket, int retries) {
+    int idx = ArraySize(disappearedTickets);
+    ArrayResize(disappearedTickets, idx + 1);
+    ArrayResize(retryCounts, idx + 1);
+    disappearedTickets[idx] = ticket;
+    retryCounts[idx] = retries;
+}
+
+void RemoveDisappeared(int index) {
+    int size = ArraySize(disappearedTickets);
+    for(int i = index; i < size - 1; i++) {
+        disappearedTickets[i] = disappearedTickets[i + 1];
+        retryCounts[i] = retryCounts[i + 1];
+    }
+    ArrayResize(disappearedTickets, size - 1);
+    ArrayResize(retryCounts, size - 1);
+}
+
+void CheckDisappearedTickets() {
+    for(int i = ArraySize(disappearedTickets) - 1; i >= 0; i--) {
+        int ticket = disappearedTickets[i];
+        
+        if(OrderSelect(ticket, SELECT_BY_TICKET, MODE_HISTORY)) {
+            SendClosedTradeUpdate(ticket);
+            AddToArray(closedTradesArray, ticket);
+            RemoveDisappeared(i);
+            Print("Trade fermé détecté (retry): #", ticket);
+        } else {
+            retryCounts[i]--;
+            
+            if(retryCounts[i] <= 0) {
+                Print("Abandon du ticket disparu: #", ticket);
+                RemoveDisappeared(i);
+            }
+        }
+    }
+}

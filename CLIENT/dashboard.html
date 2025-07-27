@@ -130,6 +130,12 @@
 
   <section class="listClose-trades-container">
     <h2>Liste trade fermer</h2>
+    <div style="margin-bottom: 1em;">
+  <label style="display: none;">Du : <input type="date" id="filterStartDate"></label>
+  <label style="display: none;">au : <input type="date" id="filterEndDate"></label>
+  <button onclick="applyDateFilter()" style="display: none;">Filtrer</button>
+</div>
+
     <div id="CLoseTradesList">
       <p>Chargement des trades fermer...</p>
     </div>
@@ -137,6 +143,6 @@
 
 
   <script src="/static/script.js"></script>
-  
+  <script src="/static/dbConfig.js"></script>
 </body>
 </html>

@@ -1,0 +1,403 @@
+#property strict
+#property show_inputs
+
+input int RefreshInterval = 5;
+
+//+------------------------------------------------------------------+
+int OnInit() {
+   EventSetTimer(RefreshInterval);
+   Print("EA Dashboard Exporter lancé, intervalle = ", RefreshInterval, "s");
+
+   if (!CheckDataFolder()) {
+      Print("Problème avec le dossier DATA");
+      return INIT_FAILED;
+   }
+
+   return INIT_SUCCEEDED;
+}
+
+void OnDeinit(const int reason) {
+   EventKillTimer();
+   Print("EA arrêté");
+}
+
+void OnTick() {
+   ProcessConfigAndManageTrades();
+}
+
+void OnTimer() {
+   ExportDashboardData();
+}
+//+------------------------------------------------------------------+
+void ExportDashboardData() {
+   string json = "{\r\n";
+
+   json += StringFormat(
+      "  \"account\": {\r\n"
+      "    \"number\": %d,\r\n"
+      "    \"name\": \"%s\",\r\n"
+      "    \"currency\": \"%s\",\r\n"
+      "    \"leverage\": %d,\r\n"
+      "    \"balance\": %.2f,\r\n"
+      "    \"equity\": %.2f,\r\n"
+      "    \"free_margin\": %.2f,\r\n"
+      "    \"margin\": %.2f\r\n"
+      "  },\r\n",
+      AccountNumber(),
+      AccountName(),
+      AccountCurrency(),
+      AccountLeverage(),
+      AccountBalance(),
+      AccountEquity(),
+      AccountFreeMargin(),
+      AccountMargin()
+   );
+
+   json += "  \"open_trades\": [\r\n";
+   bool firstOpen = true;
+   for (int i = 0; i < OrdersTotal(); i++) {
+      if (!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if (!firstOpen) json += ",\r\n";
+      firstOpen = false;
+
+      json += StringFormat(
+         "    {\"ticket\":%d,\"symbol\":\"%s\",\"type\":%d,"
+         "\"lots\":%.2f,\"open_price\":%.5f,\"open_time\":\"%s\","
+         "\"sl\":%s,\"tp\":%s,\"profit\":%.2f,\"swap\":%.2f,"
+         "\"commission\":%.2f,\"comment\":\"%s\"}",
+         OrderTicket(),
+         OrderSymbol(),
+         OrderType(),
+         OrderLots(),
+         OrderOpenPrice(),
+         TimeToStr(OrderOpenTime(), TIME_DATE | TIME_MINUTES),
+         (OrderStopLoss() > 0 ? DoubleToString(OrderStopLoss(), 5) : "null"),
+         (OrderTakeProfit() > 0 ? DoubleToString(OrderTakeProfit(), 5) : "null"),
+         OrderProfit(),
+         OrderSwap(),
+         OrderCommission(),
+         OrderComment()
+      );
+   }
+   json += "\r\n  ],\r\n";
+
+   json += "  \"closed_trades\": [\r\n";
+   bool firstClosed = true;
+   int histTotal = OrdersHistoryTotal();
+   for (int j = 0; j < histTotal; j++) {
+      if (!OrderSelect(j, SELECT_BY_POS, MODE_HISTORY)) continue;
+      if (!firstClosed) json += ",\r\n";
+      firstClosed = false;
+
+      json += StringFormat(
+         "    {\"ticket\":%d,\"symbol\":\"%s\",\"type\":%d,"
+         "\"lots\":%.2f,\"open_price\":%.5f,\"close_price\":%.5f,"
+         "\"open_time\":\"%s\",\"close_time\":\"%s\","
+         "\"sl\":%s,\"tp\":%s,\"profit\":%.2f,\"swap\":%.2f,"
+         "\"commission\":%.2f,\"comment\":\"%s\"}",
+         OrderTicket(),
+         OrderSymbol(),
+         OrderType(),
+         OrderLots(),
+         OrderOpenPrice(),
+         OrderClosePrice(),
+         TimeToStr(OrderOpenTime(), TIME_DATE | TIME_MINUTES),
+         TimeToStr(OrderCloseTime(), TIME_DATE | TIME_MINUTES),
+         (OrderStopLoss() > 0 ? DoubleToString(OrderStopLoss(), 5) : "null"),
+         (OrderTakeProfit() > 0 ? DoubleToString(OrderTakeProfit(), 5) : "null"),
+         OrderProfit(),
+         OrderSwap(),
+         OrderCommission(),
+         OrderComment()
+      );
+   }
+   json += "\r\n  ]\r\n}\r\n";
+
+   int fh = FileOpen("DATA\\dashboard_data.json", FILE_WRITE | FILE_TXT | FILE_ANSI);
+   if (fh > 0) {
+      FileWrite(fh, json);
+      FileClose(fh);
+      Print("Dashboard export mis à jour");
+   } else {
+      Print("Impossible d'écrire dashboard_data.json - Erreur: ", GetLastError());
+   }
+}
+
+//+------------------------------------------------------------------+
+bool CheckDataFolder() {
+   int handle = FileOpen("DATA\\testfile.tmp", FILE_WRITE | FILE_TXT | FILE_ANSI);
+   if (handle != INVALID_HANDLE) {
+      FileClose(handle);
+      FileDelete("DATA\\testfile.tmp");
+      return true;
+   }
+   return false;
+}
+
+//+------------------------------------------------------------------+
+void ProcessConfigAndManageTrades() {
+   string rawJson = ReadFile("DATA\\config.json");
+   Print("[DEBUG] Contenu brut de config.json:\n", rawJson);
+
+   if (StringLen(rawJson) < 10) {
+      Print("Erreur: Fichier config.json invalide ou vide");
+      return;
+   }
+
+   // Improved JSON cleaning that preserves structure
+   string json = CleanJsonPreserveStructure(rawJson);
+   Print("[DEBUG] JSON après nettoyage:\n", json);
+
+   // Find the config section more reliably
+   int configPos = StringFind(json, "\"config\"");
+   if (configPos == -1) {
+      Print("Erreur: Section 'config' introuvable dans le JSON");
+      return;
+   }
+
+   // Find the opening brace of the config object
+   int braceOpen = StringFind(json, "{", configPos);
+   if (braceOpen == -1) {
+      Print("Erreur: Accolade ouvrante non trouvée pour 'config'");
+      return;
+   }
+
+   // Find the matching closing brace
+   int braceClose = FindMatchingBrace(json, braceOpen);
+   if (braceClose == -1) {
+      Print("Erreur: Accolade fermante non trouvée pour 'config'");
+      return;
+   }
+
+   string configSection = StringSubstr(json, braceOpen, braceClose - braceOpen + 1);
+   Print("[DEBUG] Section config extraite:\n", configSection);
+
+   // Extract parameters with more robust methods
+   bool autoSL_enabled = ExtractBool(configSection, "auto_stop_loss", "enabled");
+   int autoSL_distance = ExtractInt(configSection, "auto_stop_loss", "distance_pips");
+   bool trailing_enabled = ExtractBool(configSection, "trailing_stop", "enabled");
+   int trailing_distance = ExtractInt(configSection, "trailing_stop", "distance_pips");
+   bool close_all = ExtractBool(configSection, "", "closeBloc_allTrade");
+
+   Print("[CONFIG] Paramètres extraits:");
+   Print("- SL auto: ", autoSL_enabled, " (", autoSL_distance, " pips)");
+   Print("- Trailing: ", trailing_enabled, " (", trailing_distance, " pips)");
+   Print("- Close All: ", close_all);
+
+   ManageTrades(autoSL_enabled, autoSL_distance, trailing_enabled, trailing_distance, close_all);
+}
+
+string CleanJsonPreserveStructure(string txt) {
+   // Remove newlines and tabs but keep spaces within strings
+   string result = "";
+   bool inString = false;
+   
+   for (int i = 0; i < StringLen(txt); i++) {
+      string ch = StringSubstr(txt, i, 1);
+      
+      if (ch == "\"") {
+         inString = !inString;
+         result += ch;
+      }
+      else if (!inString) {
+         if (ch != "\n" && ch != "\r" && ch != "\t") {
+            result += ch;
+         }
+      }
+      else {
+         result += ch;
+      }
+   }
+   
+   return result;
+}
+// Nettoyage du JSON (retire espaces, sauts de ligne, tabulations)
+string CleanJson(string txt) {
+   txt = StringReplace(txt, "\r", "");
+   txt = StringReplace(txt, "\n", "");
+   txt = StringReplace(txt, "\t", "");
+   txt = StringReplace(txt, " ", "");
+   return txt;
+}
+
+// Trouve l'accolade fermante correspondante
+int FindMatchingBrace(string text, int startPos) {
+   int level = 0;
+   for (int i = startPos; i < StringLen(text); i++) {
+      string ch = StringSubstr(text, i, 1);
+      if (ch == "{") level++;
+      else if (ch == "}") {
+         level--;
+         if (level == 0) return i;
+      }
+   }
+   return -1;
+}
+// Retire tout après la première occurrence d'un caractère (ici, '}')
+string RemoveAfter(string txt, uchar c) {
+   int pos = StringFind(txt, CharToString(c));
+   return (pos != -1) ? StringSubstr(txt, 0, pos) : txt;
+}
+bool ExtractBool(string json, string section, string key) {
+    int startPos = 0;
+    
+    if (section != "") {
+        string sectionPattern = "\"" + section + "\":";
+        startPos = StringFind(json, sectionPattern);
+        if (startPos == -1) return false;
+    }
+    
+    string keyPattern = "\"" + key + "\":";
+    int keyPos = StringFind(json, keyPattern, startPos);
+    if (keyPos == -1) return false;
+
+    int valueStart = StringFind(json, ":", keyPos) + 1;
+    int valueEnd = StringFind(json, ",", valueStart);
+    if (valueEnd == -1) valueEnd = StringFind(json, "}", valueStart);
+    
+    string valueStr = StringTrim(StringSubstr(json, valueStart, valueEnd - valueStart));
+    return (valueStr == "true");
+}
+double GetPipValue(string symbol = "") {
+   if (symbol == "") symbol = Symbol();
+   int digits = (int)MarketInfo(symbol, MODE_DIGITS);
+
+   // Si l'actif est à 5 ou 3 chiffres après la virgule → pip = 10 * _Point
+   if (digits == 5 || digits == 3)
+      return 10 * MarketInfo(symbol, MODE_POINT);
+
+   // Si l'actif est à 4 ou 2 chiffres → pip = 1 * _Point
+   if (digits == 4 || digits == 2)
+      return 1 * MarketInfo(symbol, MODE_POINT);
+
+   // Cas par défaut
+   return MarketInfo(symbol, MODE_POINT);
+}
+
+// Récupère un entier après une clé dans un bloc
+int ExtractInt(string json, string section, string key) {
+    int startPos = 0;
+
+    if (section != "") {
+        string sectionPattern = "\"" + section + "\":";
+        startPos = StringFind(json, sectionPattern);
+        if (startPos == -1) return 0;
+    }
+
+    string keyPattern = "\"" + key + "\":";
+    int keyPos = StringFind(json, keyPattern, startPos);
+    if (keyPos == -1) return 0;
+
+    int valueStart = StringFind(json, ":", keyPos) + 1;
+    int valueEnd = StringFind(json, ",", valueStart);
+    if (valueEnd == -1) valueEnd = StringFind(json, "}", valueStart);
+
+    string valueStr = StringTrim(StringSubstr(json, valueStart, valueEnd - valueStart));
+    return (int)StringToInteger(valueStr);
+}
+
+string StringTrim(string str) {
+    // Supprime tous les caractères non numériques/alphabétiques
+    string result = "";
+    for (int i = 0; i < StringLen(str); i++) {
+        ushort c = StringGetCharacter(str, i);
+        if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+            result += CharToString((uchar)c);
+        }
+    }
+    return result;
+}
+//+------------------------------------------------------------------+
+void ManageTrades(bool autoSL_enabled, int autoSL_distance,
+                  bool trailing_enabled, int trailing_distance,
+                  bool close_all) {
+   if (close_all) {
+      Print("Fermeture immédiate de tous les trades activée !");
+      CloseAllTrades();
+      return;
+   }
+
+   for (int i = OrdersTotal() - 1; i >= 0; i--) {
+      if (!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+
+      // SL automatique
+      if (autoSL_enabled && OrderStopLoss() == 0) {
+         double sl = CalculateStopLoss(OrderType(), OrderOpenPrice(), autoSL_distance);
+         if (!OrderModify(OrderTicket(), OrderOpenPrice(), sl, OrderTakeProfit(), 0)) {
+            Print("SL auto échec #", OrderTicket(), " Erreur: ", GetLastError());
+         } else {
+            Print("SL auto ajouté (", autoSL_distance, " pips) #", OrderTicket());
+         }
+      }
+
+      // Trailing stop
+      if (trailing_enabled) {
+         double new_sl = CalculateTrailingStop(OrderType(), OrderStopLoss(), trailing_distance);
+         if (ShouldMoveTrailing(OrderType(), OrderStopLoss(), new_sl)) {
+            if (!OrderModify(OrderTicket(), OrderOpenPrice(), new_sl, OrderTakeProfit(), 0)) {
+               Print("Trailing échec #", OrderTicket(), " Erreur: ", GetLastError());
+            } else {
+               Print("Trailing déplacé (", trailing_distance, " pips) #", OrderTicket());
+            }
+         }
+      }
+   }
+}
+
+double CalculateStopLoss(int type, double price, int distancePips) {
+   double pip = GetPipValue();
+   double minDist = MarketInfo(Symbol(), MODE_STOPLEVEL) * MarketInfo(Symbol(), MODE_POINT);
+
+   double sl = 0;
+   if (type == OP_BUY) {
+      sl = price - distancePips * pip;
+      if ((price - sl) < minDist) sl = price - minDist;
+   } else if (type == OP_SELL) {
+      sl = price + distancePips * pip;
+      if ((sl - price) < minDist) sl = price + minDist;
+   }
+
+   return NormalizeDouble(sl, (int)MarketInfo(Symbol(), MODE_DIGITS));
+}
+
+
+double CalculateTrailingStop(int type, double current_sl, int distance) {
+   return (type == OP_BUY) ? Bid - distance * _Point :
+          (type == OP_SELL) ? Ask + distance * _Point : current_sl;
+}
+
+bool ShouldMoveTrailing(int type, double current_sl, double new_sl) {
+   if (current_sl == 0) return true;
+   return (type == OP_BUY && new_sl > current_sl) ||
+          (type == OP_SELL && new_sl < current_sl);
+}
+
+void CloseAllTrades() {
+   for (int i = OrdersTotal() - 1; i >= 0; i--) {
+      if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+         double price = (OrderType() == OP_BUY) ? Bid : Ask;
+         if (!OrderClose(OrderTicket(), OrderLots(), price, 3)) {
+            Print("Échec fermeture #", OrderTicket(), " Erreur: ", GetLastError());
+         } else {
+            Print("Trade fermé #", OrderTicket());
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+string ReadFile(string filename) {
+   ResetLastError();
+   int handle = FileOpen(filename, FILE_READ | FILE_TXT | FILE_ANSI);
+   if (handle == INVALID_HANDLE) {
+      Print("Impossible d'ouvrir ", filename, " - Erreur: ", GetLastError());
+      return "";
+   }
+
+   string content = "";
+   while (!FileIsEnding(handle)) {
+      content += FileReadString(handle);
+   }
+   FileClose(handle);
+   return content;
+}

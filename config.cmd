@@ -8,6 +8,8 @@ set "TARGET_PATH=%PROJECT_PATH%DATA"
 set "MT4_PATH=C:\Users\1234\AppData\Roaming\MetaQuotes\Terminal\2C68BEE3A904BDCEE3EEF5A5A77EC162\MQL4"
 set "MT4_FILES=%MT4_PATH%\Files"
 set "SYMLINK_NAME=DATA"
+set "HOSTS_FILE=C:\Windows\System32\drivers\etc\hosts"
+set "HOSTS_ENTRY=127.0.0.1 local.host"
 
 :: === CAPITAL DÉCLARÉ (à modifier si besoin) ===
 set "STARTING_BALANCE=10000"
@@ -25,6 +27,50 @@ color %COLOR_INFO%
 echo ==========================
 echo CONFIGURATION DASHBOARD
 echo ==========================
+
+:: === Vérification/modification du fichier hosts ===
+echo [INFO] Vérification du fichier hosts...
+set "hostsEntryFound=0"
+
+:: Vérifier les droits d'administration
+net session >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    color %COLOR_ERROR%
+    echo [ERREUR] Ce script nécessite des droits administrateur pour modifier le fichier hosts.
+    echo Veuillez exécuter en tant qu'administrateur.
+    pause
+    exit /b
+)
+
+:: Vérifier si l'entrée existe déjà
+find /c "%HOSTS_ENTRY%" "%HOSTS_FILE%" >nul
+if %ERRORLEVEL% equ 0 (
+    color %COLOR_SUCCESS%
+    echo [OK] L'entrée "%HOSTS_ENTRY%" existe déjà dans le fichier hosts.
+    color %COLOR_INFO%
+    set "hostsEntryFound=1"
+)
+
+:: Ajouter l'entrée si elle n'existe pas
+if %hostsEntryFound% equ 0 (
+    echo [INFO] Ajout de l'entrée "%HOSTS_ENTRY%" dans le fichier hosts...
+    
+    echo. >> "%HOSTS_FILE%"
+    echo # Added by %DASHBOARD_NAME% configuration >> "%HOSTS_FILE%"
+    echo %HOSTS_ENTRY% >> "%HOSTS_FILE%"
+    
+    find /c "%HOSTS_ENTRY%" "%HOSTS_FILE%" >nul
+    if %ERRORLEVEL% equ 0 (
+        color %COLOR_SUCCESS%
+        echo [OK] Entrée ajoutée avec succès dans le fichier hosts.
+        color %COLOR_INFO%
+    ) else (
+        color %COLOR_ERROR%
+        echo [ERREUR] Impossible d'ajouter l'entrée dans le fichier hosts.
+        echo Veuillez vérifier manuellement le fichier %HOSTS_FILE%
+        pause
+    )
+)
 
 :: === Vérification du dossier Files MT4 ===
 if not exist "%MT4_FILES%" (
@@ -78,8 +124,8 @@ if %ERRORLEVEL% NEQ 0 (
     color %COLOR_INFO%
 )
 
-:: === Ajout variables d’environnement MT4_DASHBOARD et MT4_DASHBOARD_BALANCE ===
-echo [INFO] Ajout variables d’environnement...
+:: === Ajout variables d'environnement MT4_DASHBOARD et MT4_DASHBOARD_BALANCE ===
+echo [INFO] Ajout variables d'environnement...
 setx MT4_DASHBOARD "%PROJECT_PATH%" >nul 2>&1
 setx MT4_DASHBOARD_BALANCE "%STARTING_BALANCE%" >nul 2>&1
 

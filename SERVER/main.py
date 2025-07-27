@@ -31,6 +31,6 @@ def serve_static(filename):
 
 # === Point d'entrée principal ===
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get('PORT', 80))
     print(f"[INFO] Serveur API en cours d'exécution sur http://localhost:{port}")
     app.run(host='0.0.0.0', port=port, debug=True)  # debug=True pour rechargement auto
