@@ -60,13 +60,13 @@ Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une co
 | `api/trades/editDB` | Edition de trade |
 | `api/trades/closesDB` | Ferme un trade ouvert |
 | `api/trades/add` | Ajouter un trade |
-| `api/commentsDB/` | Liste les commentaires |
+| `api/commentsDB` | Liste les commentaires |
 | `api/comments/addDB` | Ajout d’un commentaire |
 | `api/comments/editDB` | Modification d’un commentaire |
 | `api/comments/deleteDB` | Suppression d’un commentaire |
 | `api/configDB` | Récupère la configuration |
 | `api/config/editDB` | Édite la configuration |
-| `/api/capitalSB` | Récupère le capital |
+| `/api/capitalDB` | Récupère le capital |
 | `/api/account/update`  | Mise à jour de la table compte |
 ---
 
