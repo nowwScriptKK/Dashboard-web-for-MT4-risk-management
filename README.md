@@ -29,6 +29,7 @@
      ```
      Ou importer le depuis l'onglet 
      ```"Expert consultant" dans MT4```
+     Utilisez V2 dans le fichier **MT4DashboardExporterV2SQlite/V2.ex4**
    - Redémarrer MetaTrader 4
    - Glisser l’EA sur un graphique ou double cliquez dessus avec un graphique selectionné
    - Autoriser les DLL, le trading automatique et l'adresse http : **http://local.host/** (Les 3 se trouve dans "Options", "Expert consultant"
