@@ -23,13 +23,13 @@
      ```
 3. **Lancer `config.cmd` en tant qu’administrateur**
 4. **Charger l’Expert Advisor** dans MT4 :
-   - Copier les fichiers du dossier `MT4Dashboard/MQ4` dans :
+   - Copier les fichiers du dossier `MT4DashboardExporterV2SQlite/V2.ex4` dans :
      ```
      MQL4/Experts/
      ```
      Ou importer le depuis l'onglet 
      ```"Expert consultant" dans MT4```
-     Utilisez V2 dans le fichier **MT4DashboardExporterV2SQlite/V2.ex4**
+     Utilisez V2 dans le fichier **MT4DashboardExporterV2SQlite/V2.ex4**, si vous utilisez le fork avec JSON utiliser la V1.
    - Redémarrer MetaTrader 4
    - Glisser l’EA sur un graphique ou double cliquez dessus avec un graphique selectionné
    - Autoriser les DLL, le trading automatique et l'adresse http : **http://local.host/** (Les 3 se trouve dans "Options", "Expert consultant"
