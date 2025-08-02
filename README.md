@@ -3,6 +3,40 @@
 - **Refonte complète JavaScript** Correction de la mise à jour du des calcul RR etc côté javascript + refonte complète du script .js refactorisation pour avoir une cohérence complète avec l'architecture modulaire du projet.
 - **Ré-implémentation de l'automatisation de prise de trade** Suite a la dernière mise à jour les fonctionnalité de TP/SL, fermeture de toutes les positions etc on était temporairement mis en pause, il est necessaire de retaper le JS pour avoir une belle cohérence des données
 
+<center><img src="https://github.com/nowwScriptKK/Dashboard-web-for-MT4-risk-management/blob/main/CAPTURE2.png" style="text-align: center;" alt="Texte alternatif"></center>
+
+## ⚙️ Configuration initiale
+
+### Étapes :
+
+1. **Installer Python 3.13+**
+2. **Configurer le fichier `config.cmd`** :
+   - Clic droit → Modifier
+   - Modifier cette ligne :
+     ```cmd
+     set "MT4_PATH=C:\Users\1234\AppData\Roaming\MetaQuotes\Terminal\XXXXXX\MQL4"
+     ```
+     > Pour trouver ce chemin, ouvrir MT4 → Fichier → *Ouvrir le dossier des données* → Copier le chemin jusqu’à `MQL4`
+   - Facultatif : personnaliser le solde de départ
+     ```cmd
+     set "STARTING_BALANCE=10000"
+     ```
+3. **Lancer `config.cmd` en tant qu’administrateur**
+4. **Charger l’Expert Advisor** dans MT4 :
+   - Copier les fichiers du dossier `MT4Dashboard/MQ4` dans :
+     ```
+     MQL4/Experts/
+     ```
+     - Ou importer le depuis l'onglet "Expert consultant" dans MT4
+   - Redémarrer MetaTrader 4
+   - Glisser l’EA sur un graphique ou double cliquez dessus avec un graphique selectionné
+   - Autoriser les DLL, le trading automatique et l'adresse http : http://local.host/(Les 3 se trouve dans "Options", "Expert consultant"
+
+
+Ensuite vous pouvez accéder à l'adresse http://127.0.0.1/dashboard ou http://local.host/dashboard
+---
+
+
 ### ✅ Changements récents :
 - **Passage complet de JSON à SQLite** pour remplacer les fichiers JSON, avec un énorme gain de performances.
 - **Refonte complète des API** avec ajout d’endpoints pour la **modification, l’ajout et la suppression** des données via l’interface, l'interface client n'a pas changé et les données récupérer par le JS sont exactement les mêmes que pour le JSON.
@@ -97,33 +131,6 @@ Avec ce nouveau projet, j'ai voulu restructurer entièrement l'approche : une co
 
 ---
 
-## ⚙️ Configuration initiale
-
-### Étapes :
-
-1. **Installer Python 3.13+**
-2. **Configurer le fichier `config.cmd`** :
-   - Clic droit → Modifier
-   - Modifier cette ligne :
-     ```cmd
-     set "MT4_PATH=C:\Users\1234\AppData\Roaming\MetaQuotes\Terminal\XXXXXX\MQL4"
-     ```
-     > Pour trouver ce chemin, ouvrir MT4 → Fichier → *Ouvrir le dossier des données* → Copier le chemin jusqu’à `MQL4`
-   - Facultatif : personnaliser le solde de départ
-     ```cmd
-     set "STARTING_BALANCE=10000"
-     ```
-3. **Lancer `config.cmd` en tant qu’administrateur**
-4. **Charger l’Expert Advisor** dans MT4 :
-   - Copier les fichiers du dossier `MT4Dashboard/MQ4` dans :
-     ```
-     MQL4/Experts/
-     ```
-   - Redémarrer MetaTrader 4
-   - Glisser l’EA sur un graphique
-   - Autoriser les DLL et le trading automatique
-
----
 
 
 ---
