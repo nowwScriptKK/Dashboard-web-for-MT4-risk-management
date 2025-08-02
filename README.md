@@ -31,7 +31,7 @@
      ```"Expert consultant" dans MT4```
    - Redémarrer MetaTrader 4
    - Glisser l’EA sur un graphique ou double cliquez dessus avec un graphique selectionné
-   - Autoriser les DLL, le trading automatique et l'adresse http : http://local.host/(Les 3 se trouve dans "Options", "Expert consultant"
+   - Autoriser les DLL, le trading automatique et l'adresse http : http://local.host/ (Les 3 se trouve dans "Options", "Expert consultant"
 
 Ensuite vous pouvez accéder à l'adresse http://127.0.0.1/dashboard ou http://local.host/dashboard
 
